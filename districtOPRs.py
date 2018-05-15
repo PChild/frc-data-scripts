@@ -14,12 +14,9 @@ teamsList = []
 distTeams = tba.district_teams(str(YEAR) + DISTRICT, False)
 distEvents = tba.district_events(str(YEAR) + DISTRICT)
 
-def storeEventOPRs(event):
-    eventData[event]  = tba.event_oprs(event)
-
 #Store data on common district events first
 for event in distEvents:
-    storeEventOPRs(event['key'])
+    eventData[event['key']]  = tba.event_oprs(event['key'])
 
 for team in distTeams:
     print("Processing team " + str(team['key']))
@@ -39,7 +36,7 @@ for team in distTeams:
                     oprs.append(eventData[event['key']]['oprs'][team['key']])
                 else:
                     print("Storing event " + event['key'])
-                    storeEventOPRs(event['key'])
+                    eventData[event['key']]  = tba.event_oprs(event['key'])
                     oprs.append(eventData[event['key']]['oprs'][team['key']])
             #Print errors, typically this has just been teams winning awards when
             #they didn't compete (ie Dean's list, WFA, etc.)
