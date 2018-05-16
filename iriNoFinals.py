@@ -20,7 +20,33 @@ for year in range(2012, 2018):
             print("Team " + str(team[3:]) + " missed finals in " + str(year))
             noFinals.append({'team': team[3:], 'year': year})
 
+for team in noFinals:
+    matches = tba.team_matches(int(team['team']), str(team['year'])+'iri', int(team['year']), True, False)   
+    
+    madeElims = False    
+    
+    for match in matches:
+        if match['comp_level'] != "qm":
+            madeElims = True
+    
+    team['iriElims'] = madeElims
+
+for team in noFinals:
+    matches = tba.team_matches(int(team['team']), None, int(team['year']), True, False)
+    
+    madeElims = False    
+    
+    for match in matches:
+        if match['comp_level'] != "qm":
+            madeElims = True
+    
+    team['elims'] = madeElims
+
 f = open("iriNoFinals.csv", 'w', encoding='utf-8')
+
+for prop in team.keys():
+    f.write(prop + ", ")
+f.write("\n")
 
 for team in noFinals:
     for prop in team.keys():
