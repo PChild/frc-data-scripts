@@ -2,8 +2,9 @@ import tbapy
 from bs4 import BeautifulSoup
 import requests
 import time
+import os
 
-tba = tbapy.TBA('DJRE7IGB1IBTCtvpZfFnn7aZfBWoY9bTIZfQFY7CVBZ8tWeNRX6x0XdISQ63skHv')
+tba = tbapy.TBA(os.getenv("TBA_KEY"))
 USER_AGENT = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'}
 
 DISTRICT = 'chs'

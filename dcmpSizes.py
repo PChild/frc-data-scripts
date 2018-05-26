@@ -26,7 +26,7 @@ for y in range(2009, YEAR + 1):
             for event in districtEvents:
                 hasDivisions = hasDivisions or event['event_type'] == 5
                 if hasDivisions:
-                    validTypes.pop(validTypes.index(2))
+                    validTypes.remove(2)
                     break
                 
             for event in districtEvents:
