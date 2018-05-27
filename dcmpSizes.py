@@ -1,8 +1,6 @@
-import tbapy
-import json
-import os
+import gen
 
-tba = tbapy.TBA(os.getenv("TBA_KEY"))
+tba = gen.setup()
 
 YEAR = 2018
 DISTRICTS = ['chs', 'fim', 'in', 'isr', 'mar', 'ne', 'nc', 'ont', 'pch', 'pnw']
@@ -37,5 +35,4 @@ for y in range(2009, YEAR + 1):
         except:
             pass
 
-with open('dcmpSizes.json', 'w') as outfile:
-    json.dump(dcmpData, outfile)
+gen.writeJsonFile('dcmpSizes', dcmpData)

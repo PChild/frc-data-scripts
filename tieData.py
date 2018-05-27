@@ -1,6 +1,6 @@
-import tbapy
+import gen
 
-tba = tbapy.TBA('DJRE7IGB1IBTCtvpZfFnn7aZfBWoY9bTIZfQFY7CVBZ8tWeNRX6x0XdISQ63skHv')
+tba = gen.setup()
 
 tieData = []
 
@@ -20,14 +20,4 @@ for year in YEARS:
                 matchCount += 1
     tieData.append({'year': year, 'matches': matchCount, 'ties': tieCount})
 
-f = open("tieData.csv", 'w', encoding='utf-8')
-
-for prop in tieData[0].keys():
-    f.write(prop + ", ")
-f.write("\n")
-
-for year in tieData:
-    for prop in year.keys():
-        f.write(str(year[prop]) + ", ")
-    f.write("\n")
-f.close()
+gen.listOfDictToCSV("tieData", tieData)

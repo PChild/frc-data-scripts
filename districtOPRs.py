@@ -1,6 +1,6 @@
 import statistics as stat
-import tbapy
-tba = tbapy.TBA('DJRE7IGB1IBTCtvpZfFnn7aZfBWoY9bTIZfQFY7CVBZ8tWeNRX6x0XdISQ63skHv')
+import gen
+tba = gen.setup()
 
 #These control which year and district data is pulled for
 YEAR = 2018
@@ -18,8 +18,10 @@ distEvents = tba.district_events(str(YEAR) + DISTRICT)
 for event in distEvents:
     eventData[event['key']]  = tba.event_oprs(event['key'])
 
+teamCount = 0
 for team in distTeams:
-    print("Processing team " + str(team['key']))
+    teamCount += 1
+    gen.progressBar(teamCount, len(distTeams))
     oprs = []
 
     events = tba.team_events(team['key'], YEAR)
@@ -35,7 +37,6 @@ for team in distTeams:
                 if event['key'] in eventData.keys():
                     oprs.append(eventData[event['key']]['oprs'][team['key']])
                 else:
-                    print("Storing event " + event['key'])
                     eventData[event['key']]  = tba.event_oprs(event['key'])
                     oprs.append(eventData[event['key']]['oprs'][team['key']])
             #Print errors, typically this has just been teams winning awards when
@@ -54,18 +55,4 @@ for team in distTeams:
     teamData = {'num': team['team_number'], 'maxOPR': maxOPR, 'avgOPR': avgOPR, 'city': team['city'], 'state': team['state_prov'], 'rookie_year': team['rookie_year']}
     teamsList.append(teamData)
 
-#File to save out to, will overwrite if script is rerun.
-f = open(DISTRICT + str(YEAR) + "OPRs.csv", 'w')
-
-#write out names of data fields. This is kind of bad and uses data from the last
-#loop execution to get field names.
-for prop in teamData.keys():
-    f.write(prop + ", ")
-f.write("\n")
-
-#iterate over the teams we got data for and write out their data.
-for team in teamsList:
-    for prop in team.keys():
-        f.write(str(team[prop]) + ", ")
-    f.write("\n")
-f.close()
+gen.listOfDictToCSV(DISTRICT + str(YEAR) + "OPRs", teamsList)

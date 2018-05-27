@@ -1,7 +1,7 @@
 import pandas as pd
-import tbapy
+import gen
 
-tba = tbapy.TBA('DJRE7IGB1IBTCtvpZfFnn7aZfBWoY9bTIZfQFY7CVBZ8tWeNRX6x0XdISQ63skHv')
+tba = gen.setup()
 
 YEAR = 2018
 

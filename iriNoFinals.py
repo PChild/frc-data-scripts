@@ -1,6 +1,6 @@
-import tbapy
+import gen
 
-tba = tbapy.TBA('DJRE7IGB1IBTCtvpZfFnn7aZfBWoY9bTIZfQFY7CVBZ8tWeNRX6x0XdISQ63skHv')
+tba = gen.setup()
 
 noFinals = []
 
@@ -38,14 +38,4 @@ for team in noFinals:
     
     team['elims'] = madeElims
 
-f = open("iriNoFinals.csv", 'w', encoding='utf-8')
-
-for prop in team:
-    f.write(prop + ", ")
-f.write("\n")
-
-for team in noFinals:
-    for prop in team:
-        f.write(str(team[prop]) + ", ")
-    f.write("\n")
-f.close()
+gen.listOfDictToCSV("iriNoFinals", noFinals)

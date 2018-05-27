@@ -1,6 +1,6 @@
-import tbapy
+import gen
 
-tba = tbapy.TBA('DJRE7IGB1IBTCtvpZfFnn7aZfBWoY9bTIZfQFY7CVBZ8tWeNRX6x0XdISQ63skHv')
+tba = gen.setup()
 
 YEAR = 2019
 DISTRICT = 'chs'
@@ -50,15 +50,5 @@ for team in teams:
             print("Award in " + str(year))
             teamRecord['rating'] += (caCount * CA_WEIGHT + eiCount * EI_WEIGHT + entCount * ENT_WEIGHT) / (YEAR - year + 1)
     winners.append(teamRecord)
-    
-f = open("caRatings.csv", 'w')
-for prop in sorted(teamRecord):
-    f.write(prop + ", ")
-f.write("\n")
 
-
-for winner in winners:
-    for prop in sorted(teamRecord):
-        f.write(str(winner[prop]) + ", ")
-    f.write("\n")
-f.close()
+gen.listOfDictToCSV("caRatings", winners)
