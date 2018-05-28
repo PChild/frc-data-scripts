@@ -3,7 +3,7 @@ import tbapy
 import json
 import os
     
-def setup(apiKey="TBA_API", useEnv=True):
+def setup(apiKey="TBA_KEY", useEnv=True):
     '''
     Sets up tbapy with an API key from a system environment variable    
     
