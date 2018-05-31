@@ -41,7 +41,7 @@ def listOfDictToCSV(filename, listObj):
     :param listObj: The list of objects to write out
     '''
     
-    f = open(filename + "O.csv", 'w')
+    f = open(filename + ".csv", 'w')
 
     for prop in listObj[0].keys():
         f.write(prop + ", ")
