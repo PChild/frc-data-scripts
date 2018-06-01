@@ -53,6 +53,7 @@ def handlePA(team, year):
 
 def addToDistrict(team, district, year):
     districtStats[district]['years'][year]['teams'] += 1
+    districtStats[district]['years'][year]['teamList'].append(team['team_number'])
     districtStats[district]['currentTeams'].append(team['team_number'])
 
 
@@ -62,7 +63,7 @@ for district in DISTRICTS:
     districtStats[district] = {'currentTeams': [], 'prevTeams': [], 'years': {}}
     
     for year in yearRange:
-        districtStats[district]['years'][str(year)] = {'dist': False, 'teams': 0, 'added': 0, 'lost': 0}
+        districtStats[district]['years'][str(year)] = {'dist': False, 'teams': 0, 'added': 0, 'lost': 0, 'teamList': []}
 
 
 for count, y in enumerate(yearRange):
@@ -127,4 +128,5 @@ for d in districtStats:
         lost = dist[year]['lost']
         districtTable.append({'dist': d, 'year': year, 'isDist': isDist, 'teams': teams, 'added': added, 'lost': lost})
 
+gen.writeJsonFile('districtGrowth', districtStats)
 gen.listOfDictToCSV('districtGrowth', districtTable)
