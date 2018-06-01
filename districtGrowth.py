@@ -52,32 +52,28 @@ def handlePA(team, year):
             outOfMar.append(team['team_number'])    
 
 def addToDistrict(team, district, year):
-    districtStats[district][year]['teams'] += 1
-    districtStats[district][year]['currentTeams'].append(team['team_number'])
+    districtStats[district]['years'][year]['teams'] += 1
+    districtStats[district]['currentTeams'].append(team['team_number'])
 
-
-for district in DISTRICTS:
-    districtStats[district] = {}
 
 yearRange = range(1992, YEAR + 1)
+
+for district in DISTRICTS:
+    districtStats[district] = {'currentTeams': [], 'prevTeams': [], 'years': {}}
+    
+    for year in yearRange:
+        districtStats[district]['years'][str(year)] = {'dist': False, 'teams': 0, 'added': 0, 'lost': 0}
+
 
 for count, y in enumerate(yearRange):
     gen.progressBar(count, len(yearRange))
     
     currentDistricts = tba.districts(y)
-    
     year = str(y)
-
-    for district in DISTRICTS:
-        districtStats[district][year] = {}
-        districtStats[district][year]['dist'] = False
-        districtStats[district][year]['teams'] = 0
-        districtStats[district][year]['currentTeams'] = []
     
     for district in currentDistricts:
         if district['abbreviation'] != 'tx':
-            districtStats[district['abbreviation']][year]['dist'] = True
-    
+            districtStats[district['abbreviation']]['years'][year]['dist'] = True
     
     teams = []
     for page in range(0,20):
@@ -90,6 +86,7 @@ for count, y in enumerate(yearRange):
                 teams += newTeams
         except:
             pass
+        
     for team in teams:
         if team['country'] in DISTRICT_STATES['isr']:
             addToDistrict(team, 'isr', year)
@@ -99,20 +96,35 @@ for count, y in enumerate(yearRange):
                     handlePA(team, year)
                 else:
                     addToDistrict(team, district, year)
+                    
+    for district in DISTRICTS:
+        d = districtStats[district]
+        for team in d['currentTeams']:
+            if team not in d['prevTeams']:
+                d['years'][year]['added'] += 1
+        for team in d['prevTeams']:
+            if team not in d['currentTeams']:
+                d['years'][year]['lost'] += 1
+        d['prevTeams'] = d['currentTeams']
+        d['currentTeams'] = []
 
-
+#MAR validation checking
 marTeams = tba.district_teams('2018mar')
 for team in marTeams:
     if team['team_number'] in outOfMar:
         print(team['team_number'], "is actually in MAR")
 
+
+#Prep table and then save it out
 districtTable = []
 for d in districtStats:
-    dist = districtStats[d]
+    dist = districtStats[d]['years']
 
     for year in dist:
-        isDist = districtStats[d][year]['dist']
-        teams = districtStats[d][year]['teams']
-        districtTable.append({'dist': d, 'year': year, 'isDist': isDist, 'teams': teams})
+        isDist = dist[year]['dist']
+        teams = dist[year]['teams']
+        added = dist[year]['added']
+        lost = dist[year]['lost']
+        districtTable.append({'dist': d, 'year': year, 'isDist': isDist, 'teams': teams, 'added': added, 'lost': lost})
 
 gen.listOfDictToCSV('districtGrowth', districtTable)
