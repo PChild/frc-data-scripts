@@ -17,7 +17,22 @@ def setup(apiKey="TBA_KEY", useEnv=True):
         apiKey = os.getenv(apiKey)
     
     return tbapy.TBA(apiKey)
+
+def matchResult(team, match):
+    teamColor = 'blue'
+    result = 'loss'
     
+    if 'frc' + str(team) in match['alliances']['red']['team_keys']:
+        teamColor = 'red'
+        
+    if match['winning_alliance'] == teamColor:
+        result = 'win'
+    
+    if match['winning_alliance'] == '':
+        result = 'tie'
+    
+    return result 
+
 def progressBar(value, endvalue, bar_length=20):
         '''
         Simple progress bar
@@ -41,7 +56,7 @@ def listOfDictToCSV(filename, listObj):
     :param listObj: The list of objects to write out
     '''
     
-    f = open(filename + ".csv", 'w')
+    f = open(filename + ".csv", 'w', encoding='utf-8')
 
     for prop in listObj[0].keys():
         f.write(prop + ", ")
