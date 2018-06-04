@@ -37,16 +37,16 @@ def teamAtEvent(team, event):
         teamAwards = tba.team_awards(team, None, event)
          
         if teamMatches != []:
-            teamStats = tba.team_status(team, event)
-            #Find draft points
-            alliance = teamStats['alliance']           
-            if alliance:
-                if alliance['pick'] < 2:
-                    draftPoints = 17 - alliance['number']
-                else:
-                    draftPoints = alliance['number']
-            
             try:
+                teamStats = tba.team_status(team, event)
+                #Find draft points
+                alliance = teamStats['alliance']           
+                if alliance:
+                    if alliance['pick'] < 2:
+                        draftPoints = 17 - alliance['number']
+                    else:
+                        draftPoints = alliance['number']
+    
                 #Find quals ranking points
                 teamCount = teamStats['qual']['num_teams']
                 teamRank = teamStats['qual']['ranking']['rank']
