@@ -77,7 +77,7 @@ def teamAtEvent(team, event):
 
 teamRatings = []
 
-for page in range(0,20):
+for page in range(6,20):
     print("On page", page)    
     pageTeams = tba.teams(page, YEAR, False, True)
     
@@ -85,26 +85,28 @@ for page in range(0,20):
         break
     else:
         for team in pageTeams:
-            teamRating = 0
-            teamTotal = 0
-            teamMax = 0
-            teamNum = int(team[3:])
-            pastYears = sorted(tba.team_years(team)[-yearDepth:], key=int, reverse=True)
-            
-            tmpYears = pastYears[:]
-            
-            for year in tmpYears:
-                if year < YEAR - yearDepth:
-                    pastYears.remove(year)
-            for count, year in enumerate(pastYears):
-                yearPoints = 0
+            if int(team[3:]) > 3300:
+                print(team)
+                teamRating = 0
+                teamTotal = 0
+                teamMax = 0
+                teamNum = int(team[3:])
+                pastYears = sorted(tba.team_years(team)[-yearDepth:], key=int, reverse=True)
                 
-                for event in tba.team_events(teamNum, year, False, True):
-                    yearPoints += teamAtEvent(teamNum, event)
+                tmpYears = pastYears[:]
+                
+                for year in tmpYears:
+                    if year < YEAR - yearDepth:
+                        pastYears.remove(year)
+                for count, year in enumerate(pastYears):
+                    yearPoints = 0
                     
-                teamRating += yearPoints / pow(2, count)
-                teamMax = yearPoints if yearPoints > teamMax else teamMax
-                teamTotal += yearPoints
-            teamRatings.append({'team': teamNum, 'rating': teamRating, 'max': teamMax, 'total': teamTotal, 'avg': teamTotal / yearDepth})
-            print("Finished team", team)
-gen.listOfDictToCSV("slffRatings", teamRatings)
+                    for event in tba.team_events(teamNum, year, False, True):
+                        yearPoints += teamAtEvent(teamNum, event)
+                        
+                    teamRating += yearPoints / pow(2, count)
+                    teamMax = yearPoints if yearPoints > teamMax else teamMax
+                    teamTotal += yearPoints
+                teamRatings.append({'team': teamNum, 'rating': teamRating, 'max': teamMax, 'total': teamTotal, 'avg': teamTotal / yearDepth})
+gen.writeJsonFile("2733to10000", {'ratings': teamRatings})
+#gen.listOfDictToCSV("slffRatings", teamRatings)

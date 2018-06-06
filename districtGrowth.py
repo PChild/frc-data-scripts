@@ -5,9 +5,14 @@ tba = gen.setup()
 
 YEAR = 2018
 
-DISTRICTS = ['chs', 'fim', 'in', 'isr', 'mar', 'ne', 'nc', 'ont', 'pch', 'pnw']
+DISTRICTS = ['chs', 'fim', 'in', 'isr', 'mar', 'ne', 'nc', 'ont', 'pch', 'pnw', 'mn', 'ca', 'tx', 'ny', 'sc']
 
-DISTRICT_STATES = {'chs': ['Virginia', 'Maryland', 'District of Columbia', 'DC', 'VA, ''MD'],
+DISTRICT_STATES = {'mn': ['Minnesota', 'MN'],
+                   'ca': ['California', 'CA'], 
+                   'tx': ['Texas', 'TX'], 
+                   'ny': ['New York', 'NY'], 
+                   'sc': ['South Carolina', 'SC'],
+                   'chs': ['Virginia', 'Maryland', 'District of Columbia', 'DC', 'VA, ''MD'],
                    'fim': ['Michigan', 'MI'],
                     'in': ['Indiana', 'IN'],
                     'isr': ['Israel'],
@@ -71,7 +76,7 @@ for count, y in enumerate(yearRange):
     
     currentDistricts = tba.districts(y)
     year = str(y)
-    
+        
     for district in currentDistricts:
         if district['abbreviation'] != 'tx':
             districtStats[district['abbreviation']]['years'][year]['dist'] = True
