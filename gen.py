@@ -58,12 +58,13 @@ def listOfDictToCSV(filename, listObj):
     
     f = open(filename + ".csv", 'w', encoding='utf-8')
 
-    for prop in listObj[0].keys():
+    keys = listObj[0].keys()
+    for prop in keys:
         f.write(prop + ", ")
     f.write("\n")
     
     for team in listObj:
-        for prop in team.keys():
+        for prop in keys:
             f.write(str(team[prop]) + ", ")
         f.write("\n")
     f.close()

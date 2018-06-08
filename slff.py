@@ -3,7 +3,43 @@ from scipy.special import erfinv
 
 tba = gen.setup()
 YEAR = 2018
-yearDepth = 3
+KEY = "txsc"
+isDistrict = False
+
+
+def calcPoints(team, event):
+    teamMatches = tba.team_matches(team, event, None, True)
+    draftPoints = 0
+    rankPoints = 0
+    elimPoints = 0
+     
+    if teamMatches != []:
+        try:
+            #Use team status instead of event_district_points since SLFF counts elims and awards points differently..s
+            teamStats = tba.team_status(team, event)
+            #Find draft points
+            alliance = teamStats['alliance']           
+            if alliance:
+                if alliance['pick'] < 2:
+                    draftPoints = 17 - alliance['number']
+                else:
+                    draftPoints = alliance['number']
+
+            #Find quals ranking points
+            teamCount = teamStats['qual']['num_teams']
+            teamRank = teamStats['qual']['ranking']['rank']
+            alpha = 1.07
+            rankPoints = int(abs(erfinv( (teamCount - 2 * teamRank + 2) /  (alpha * teamCount)) * 10 / erfinv( 1 / alpha ) + 12 ) + .5)
+        except:
+            pass
+    
+        #Find points for playing in elims
+        for match in teamMatches:
+            if match['comp_level'] != "qm":
+                if gen.matchResult(team, match) == 'win':
+                    elimPoints += 5
+    
+    return draftPoints + rankPoints + elimPoints
 
 def teamAtEvent(team, event):
     ROBOT_AWARDS = [16, 17, 20, 21, 29, 71]
@@ -26,40 +62,13 @@ def teamAtEvent(team, event):
     
     isOfficial = eventInfo['event_type'] in range(0, 7)
     isChamps = eventInfo['event_type'] in range(3, 5)
-        
-    rankPoints = 0
-    draftPoints = 0
-    elimPoints = 0
+
     awardPoints = 0
+    playPoints = 0
     
     if isOfficial:
-        teamMatches = tba.team_matches(team, event, None, True)
         teamAwards = tba.team_awards(team, None, event)
-         
-        if teamMatches != []:
-            try:
-                teamStats = tba.team_status(team, event)
-                #Find draft points
-                alliance = teamStats['alliance']           
-                if alliance:
-                    if alliance['pick'] < 2:
-                        draftPoints = 17 - alliance['number']
-                    else:
-                        draftPoints = alliance['number']
-    
-                #Find quals ranking points
-                teamCount = teamStats['qual']['num_teams']
-                teamRank = teamStats['qual']['ranking']['rank']
-                alpha = 1.07
-                rankPoints = int(abs(erfinv( (teamCount - 2 * teamRank + 2) /  (alpha * teamCount)) * 10 / erfinv( 1 / alpha ) + 12 ) + .5)
-            except:
-                pass
-        
-            #Find points for playing in elims
-            for match in teamMatches:
-                if match['comp_level'] != "qm":
-                    if gen.matchResult(team, match) == 'win':
-                        elimPoints += 5
+        playPoints = calcPoints(team, event)
             
         #Process awards at the event, handle champs vs regular events.
         eventType = 'CMP' if isChamps else 'REG'
@@ -73,40 +82,63 @@ def teamAtEvent(team, event):
                 awardType = 'OTHER'
             awardPoints += awardData[eventType][awardType]
             
-    return rankPoints + draftPoints + elimPoints + awardPoints
+    return [playPoints, awardPoints]
 
-teamRatings = []
-
-for page in range(6,20):
-    print("On page", page)    
-    pageTeams = tba.teams(page, YEAR, False, True)
+def getTeamRatingData(team, yearDepth=3):
+    overallRating = 0
+    playRating = 0
+    teamTotal = 0
+    eventMax = 0
+    eventCount = 0
+    eventAvg = 0
+    pastYears = sorted(tba.team_years(team)[-yearDepth:], key=int, reverse=True)
     
-    if pageTeams == []:
-        break
+    tmpYears = pastYears[:]
+                
+    for year in tmpYears:
+        if year < YEAR - yearDepth:
+            pastYears.remove(year)
+    for count, year in enumerate(pastYears):
+        yearPoints = 0
+        yearPlayPoints = 0
+        
+        for event in tba.team_events(team, year, False, True):
+            eventPlayPoints, eventAwardPoints = teamAtEvent(team, event)
+            eventPoints = eventPlayPoints + eventAwardPoints            
+            yearPoints += eventPoints
+            yearPlayPoints += eventPlayPoints
+            if eventPoints > 0:
+                eventCount += 1
+            eventMax = eventPoints if eventPoints > eventMax else eventMax
+        
+        playRating += yearPlayPoints / pow(2, count)
+        overallRating += yearPoints / pow(2, count)
+        teamTotal += yearPoints
+    eventAvg = teamTotal / eventCount
+    return {'Team #': team[3:], 
+            'Overall Rating': overallRating, 
+            'Event Max Points': eventMax, 
+            'Total Points': teamTotal, 
+            'Year Avg': teamTotal / yearDepth, 
+            'Event Avg': eventAvg, 
+            'Events': eventCount, 
+            'playRating': playRating}
+
+def buildDraftList(key, isDistrict):
+    if isDistrict:
+        teamList = tba.district_teams(key, False, True)
     else:
-        for team in pageTeams:
-            if int(team[3:]) > 3300:
-                print(team)
-                teamRating = 0
-                teamTotal = 0
-                teamMax = 0
-                teamNum = int(team[3:])
-                pastYears = sorted(tba.team_years(team)[-yearDepth:], key=int, reverse=True)
-                
-                tmpYears = pastYears[:]
-                
-                for year in tmpYears:
-                    if year < YEAR - yearDepth:
-                        pastYears.remove(year)
-                for count, year in enumerate(pastYears):
-                    yearPoints = 0
-                    
-                    for event in tba.team_events(teamNum, year, False, True):
-                        yearPoints += teamAtEvent(teamNum, event)
-                        
-                    teamRating += yearPoints / pow(2, count)
-                    teamMax = yearPoints if yearPoints > teamMax else teamMax
-                    teamTotal += yearPoints
-                teamRatings.append({'team': teamNum, 'rating': teamRating, 'max': teamMax, 'total': teamTotal, 'avg': teamTotal / yearDepth})
-gen.writeJsonFile("2733to10000", {'ratings': teamRatings})
-#gen.listOfDictToCSV("slffRatings", teamRatings)
+        teamList = tba.event_teams(key, False, True)
+    listData = []
+    for idx, team in enumerate(teamList):
+        gen.progressBar(idx, len(teamList))
+        listData.append(getTeamRatingData(team))
+    return listData
+
+eventCode = str(YEAR) + KEY
+teamData = buildDraftList(eventCode, isDistrict)
+
+for team in teamData:
+    team['actual'] = calcPoints(int(team['Team #']), eventCode)
+    
+gen.listOfDictToCSV(eventCode + "Validate", teamData)
