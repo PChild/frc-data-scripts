@@ -2,9 +2,16 @@ import gen
 from scipy.special import erfinv
 
 tba = gen.setup()
+VALIDATE = False
 YEAR = 2018
-KEY = "txsc"
+KEY = "mibb"
 isDistrict = False
+
+bbTeams = ["frc33", "frc51", "frc280", "frc280", "frc313", "frc503", "frc548",
+           "frc815", "frc862", "frc862", "frc1732", "frc2620", "frc2832", 
+           "frc2834", "frc3542", "frc3604", "frc3604", "frc4130", "frc4405", 
+           "frc5050", "frc5090", "frc5498", "frc5502", "frc5530", "frc5577", 
+           "frc5907", "frc6618", "frc6861", "frc6861", "frc6914"]
 
 
 def calcPoints(team, event):
@@ -15,7 +22,7 @@ def calcPoints(team, event):
      
     if teamMatches != []:
         try:
-            #Use team status instead of event_district_points since SLFF counts elims and awards points differently..s
+            #Use team status instead of event_district_points since SLFF counts elims and awards points differently...
             teamStats = tba.team_status(team, event)
             #Find draft points
             alliance = teamStats['alliance']           
@@ -124,8 +131,10 @@ def getTeamRatingData(team, yearDepth=3):
             'Events': eventCount, 
             'playRating': playRating}
 
-def buildDraftList(key, isDistrict):
-    if isDistrict:
+def buildDraftList(key, isDistrict, eventTeams=None):
+    if eventTeams:
+      teamList = eventTeams  
+    elif isDistrict:
         teamList = tba.district_teams(key, False, True)
     else:
         teamList = tba.event_teams(key, False, True)
@@ -136,9 +145,13 @@ def buildDraftList(key, isDistrict):
     return listData
 
 eventCode = str(YEAR) + KEY
-teamData = buildDraftList(eventCode, isDistrict)
+teamData = buildDraftList(eventCode, isDistrict, bbTeams)
 
-for team in teamData:
-    team['actual'] = calcPoints(int(team['Team #']), eventCode)
-    
-gen.listOfDictToCSV(eventCode + "Validate", teamData)
+fileName = eventCode
+
+if VALIDATE:
+    fileName += "Validate"
+    for team in teamData:
+        team['actual'] = calcPoints(int(team['Team #']), eventCode)
+        
+gen.listOfDictToCSV(fileName, teamData)
