@@ -22,7 +22,10 @@ def matchResult(team, match):
     teamColor = 'blue'
     result = 'loss'
     
-    if 'frc' + str(team) in match['alliances']['red']['team_keys']:
+    if 'frc' not in str(team):
+        team = 'frc' + str(team)
+    
+    if str(team) in match['alliances']['red']['team_keys']:
         teamColor = 'red'
         
     if match['winning_alliance'] == teamColor:
@@ -48,17 +51,22 @@ def progressBar(value, endvalue, bar_length=20):
         sys.stdout.write("\rPercent: [{0}] {1}%".format(arrow + spaces, int(round(percent * 100))))
         sys.stdout.flush()
         
-def listOfDictToCSV(filename, listObj):
+def listOfDictToCSV(filename, listObj, colOrder=None):
     '''
     Saves a list of flat dictionaries out to a csv.
     
     :param filename: The file to write to
     :param listObj: The list of objects to write out
+    :param colOrder: An array specifying the order to write columns in.
     '''
     
     f = open(filename + ".csv", 'w', encoding='utf-8')
-
+    
     keys = listObj[0].keys()
+
+    if colOrder:
+        keys = colOrder
+    
     for prop in keys:
         f.write(prop + ", ")
     f.write("\n")

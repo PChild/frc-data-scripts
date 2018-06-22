@@ -11,8 +11,15 @@ bbTeams = ["frc33", "frc51", "frc280", "frc280", "frc313", "frc503", "frc548",
            "frc815", "frc862", "frc862", "frc1732", "frc2620", "frc2832", 
            "frc2834", "frc3542", "frc3604", "frc3604", "frc4130", "frc4405", 
            "frc5050", "frc5090", "frc5498", "frc5502", "frc5530", "frc5577", 
-           "frc5907", "frc6618", "frc6861", "frc6861", "frc6914"]
+           "frc5907", "frc6618", "frc6861", "frc6861", "frc6914", "frc1481"]
 
+
+mmTeams= ["frc224", "frc1218", "frc4035", "frc316", "frc193", "frc2016", 
+          "frc3142", "frc3340", "frc4454", "frc321", "frc225", "frc484", 
+          "frc2607", "frc806", "frc1796", "frc1923", "frc4653", "frc75", 
+          "frc102", "frc369", "frc219", "frc6590", "frc5123", "frc1676", 
+          "frc708", "frc2590", "frc4652", "frc1257", "frc5420", "frc6897", 
+          "frc2539", "frc11"]
 
 def calcPoints(team, event):
     teamMatches = tba.team_matches(team, event, None, True)
@@ -118,18 +125,18 @@ def getTeamRatingData(team, yearDepth=3):
                 eventCount += 1
             eventMax = eventPoints if eventPoints > eventMax else eventMax
         
-        playRating += yearPlayPoints / pow(2, count)
-        overallRating += yearPoints / pow(2, count)
+        playRating += yearPlayPoints / pow(2, count * 2)
+        overallRating += yearPoints / pow(2, count * 2)
         teamTotal += yearPoints
     eventAvg = teamTotal / eventCount
-    return {'Team #': team[3:], 
+    return {'Team': team[3:], 
             'Overall Rating': overallRating, 
-            'Event Max Points': eventMax, 
+            'Event Max': eventMax, 
             'Total Points': teamTotal, 
             'Year Avg': teamTotal / yearDepth, 
             'Event Avg': eventAvg, 
             'Events': eventCount, 
-            'playRating': playRating}
+            'Play Rating': playRating}
 
 def buildDraftList(key, isDistrict, eventTeams=None):
     if eventTeams:
@@ -154,4 +161,6 @@ if VALIDATE:
     for team in teamData:
         team['actual'] = calcPoints(int(team['Team #']), eventCode)
         
-gen.listOfDictToCSV(fileName, teamData)
+        
+colOrder = ['Team', 'Play Rating', 'Overall Rating', 'Total Points', 'Event Max', 'Event Avg', 'Year Avg', 'Events']        
+gen.listOfDictToCSV(fileName, teamData, colOrder)
