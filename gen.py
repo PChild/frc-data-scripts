@@ -67,13 +67,23 @@ def listOfDictToCSV(filename, listObj, colOrder=None):
     if colOrder:
         keys = colOrder
     
-    for prop in keys:
-        f.write(prop + ", ")
+    for (idx, prop) in enumerate(keys):
+        tail = ", "
+        
+        if idx == len(keys) - 1:
+            tail = ""
+            
+        f.write(prop + tail)
     f.write("\n")
     
     for team in listObj:
-        for prop in keys:
-            f.write(str(team[prop]) + ", ")
+        for (idx, prop) in enumerate(keys):
+            tail = ", "
+            
+            if idx == len(keys) - 1:
+                tail = ""
+                
+            f.write(str(team[prop]) + tail)
         f.write("\n")
     f.close()
     
