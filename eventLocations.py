@@ -10,7 +10,7 @@ YEAR = 2018
 data = []
 usedStates = []
 
-inDistricts = ['MI', 'IN', 'VA', 'MD', 'DC', 'NC', 'GA', 'RI', 'MA', 'ME', 'VT', 'WA', 'OR', 'DE', 'PA', 'NH', 'NJ', 'ON', 'TX', 'CT']
+inDistricts = ['NM', 'AK', 'MI', 'IN', 'VA', 'MD', 'DC', 'NC', 'GA', 'RI', 'MA', 'ME', 'VT', 'WA', 'OR', 'DE', 'PA', 'NH', 'NJ', 'ON', 'TX', 'CT']
 
 newNames = []
 for abbrv in inDistricts:
