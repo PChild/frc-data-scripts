@@ -15,7 +15,7 @@ def handleZip(obj):
         if not location.postal:
             location = geocoder.osm((location.lat, location.lng), method="reverse")
         sleep(1)
-        zipCode = location
+        zipCode = location.postal
         if obj['country'] == "Canada":
             zipCode = zipCode[:3]
     except:
