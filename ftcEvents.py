@@ -3,8 +3,10 @@ import requests
 import geocoder
 from pathlib import Path
 import csv
+import re
 from time import sleep
 
+zipPattern = re.compile("\d+\-\d+")
 fileName = "ftcData.csv"
 ftcData = []
 
@@ -80,6 +82,17 @@ for (idx, obj) in enumerate(ftcData):
     if obj['location'] == 'None' or obj['location'] == None or obj['location'] == '':
         obj['location'] = handleZip(item)
         modifiedCount += 1
-
+    
+    if bool(zipPattern.match(obj['location'])):
+        obj['location'] = obj['location'][:5]
+        modifiedCount += 1
+    if(len(obj['location']) == 4 and obj['country'] == 'USA'):
+        obj['location'] = str(0) + obj['location']
+        modifiedCount += 1
+    if (obj['location'][:3] == "AK " ):
+        obj['location'] = obj['location'][3:][:5]
+        modifiedCount += 1
+        
+    
 print("Updated", modifiedCount, "objects out of", len(ftcData))
 gen.listOfDictToCSV("ftcData", ftcData)
