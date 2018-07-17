@@ -1,12 +1,72 @@
 import gen
 from scipy.special import erfinv
+import statistics as stat
 import math
 
 tba = gen.setup()
 VALIDATE = False
-YEAR = 2018
-KEY = "txri"
 isDistrict = False
+
+eventData = {}
+def getPerformanceData(team):
+    oprs = []
+    wins = 0
+    losses = 0
+    ties = 0
+    
+    try:
+        matches = tba.team_matches(team, None, YEAR, True, False)    
+        if len(matches) > 0:
+            for match in matches:       
+                wins += 'win' == gen.matchResult(team, match)
+                losses += 'loss' == gen.matchResult(team, match)
+                ties += 'tie' == gen.matchResult(team, match)
+    except:
+        print("Could not retrieve matches for", team)
+        
+    try:
+        events = tba.team_events(team, YEAR)
+        if len(events) > 0:    
+            for event in events:
+                if event['event_type'] in range(0,10):
+                    try:
+                        if event['key'] in eventData.keys():
+                            oprs.append(eventData[event['key']]['oprs'][team])
+                        else:
+                            print("Storing event " + event['key'])
+                            eventData[event['key']]  = tba.event_oprs(event['key'])
+                            oprs.append(eventData[event['key']]['oprs'][team])
+        
+                    except Exception as e:
+                        print(e)
+    except:
+        print("Could not retrieve events for", team)
+        
+        
+    if len(oprs) is 0:
+        maxOPR = 0
+        avgOPR = 0
+    else:
+        maxOPR = max(oprs)
+        avgOPR = stat.mean(oprs)
+    
+    played = wins + losses + ties
+    winPercent = .3
+    
+    if played > 0:
+        winPercent = wins / played
+    
+    teamKey = team
+    if team[:3] == "frc":
+        teamKey = team[3:]
+    
+    return {'Team': teamKey, 
+            'Max OPR': maxOPR, 
+            'Avg OPR': avgOPR, 
+            'Wins': wins, 
+            'Losses': losses, 
+            'Ties': ties, 
+            'Win %': winPercent}
 
 def calcPoints(team, event):
     teamMatches = tba.team_matches(team, event, None, True)
@@ -92,31 +152,39 @@ def getTeamRatingData(team, yearDepth=3):
     eventMax = 0
     eventCount = 0
     eventAvg = 0
-    pastYears = sorted(tba.team_years(team)[-yearDepth:], key=int, reverse=True)
+    teamYears = tba.team_years(team)
     
-    tmpYears = pastYears[:]
-                
-    for year in tmpYears:
-        if year < YEAR - yearDepth:
-            pastYears.remove(year)
-    for count, year in enumerate(pastYears):
-        yearPoints = 0
-        yearPlayPoints = 0
+    if len(teamYears) > 0:
+        pastYears = sorted(teamYears[-yearDepth:], key=int, reverse=True)
         
-        for event in tba.team_events(team, year, False, True):
-            eventPlayPoints, eventAwardPoints = teamAtEvent(team, event)
-            eventPoints = eventPlayPoints + eventAwardPoints            
-            yearPoints += eventPoints
-            yearPlayPoints += eventPlayPoints
-            if eventPoints > 0:
-                eventCount += 1
-            eventMax = eventPoints if eventPoints > eventMax else eventMax
-        
-        playRating += yearPlayPoints / pow(2, count * 2)
-        overallRating += yearPoints / pow(2, count * 2)
-        teamTotal += yearPoints
-    eventAvg = teamTotal / eventCount
-    return {'Team': team[3:], 
+        tmpYears = pastYears[:]
+                    
+        for year in tmpYears:
+            if year < YEAR - yearDepth:
+                pastYears.remove(year)
+        for count, year in enumerate(pastYears):
+            yearPoints = 0
+            yearPlayPoints = 0
+            
+            for event in tba.team_events(team, year, False, True):
+                eventPlayPoints, eventAwardPoints = teamAtEvent(team, event)
+                eventPoints = eventPlayPoints + eventAwardPoints            
+                yearPoints += eventPoints
+                yearPlayPoints += eventPlayPoints
+                if eventPoints > 0:
+                    eventCount += 1
+                eventMax = eventPoints if eventPoints > eventMax else eventMax
+            
+            playRating += yearPlayPoints / pow(2, count * 2)
+            overallRating += yearPoints / pow(2, count * 2)
+            teamTotal += yearPoints
+        eventAvg = teamTotal / eventCount
+    
+    teamKey = team
+    if team[:3] == "frc":
+        teamKey = team[3:]
+    
+    return {'Team': teamKey, 
             'Overall Rating': overallRating, 
             'Event Max': eventMax, 
             'Total Points': teamTotal, 
@@ -134,21 +202,33 @@ def buildDraftList(key, isDistrict, eventTeams=None):
         teamList = tba.event_teams(key, False, True)
     listData = []
     for idx, team in enumerate(teamList):
-        gen.progressBar(idx, len(teamList))
-        listData.append(getTeamRatingData(team))
+        print(team)
+        ratingData = getTeamRatingData(team)
+        perfData = getPerformanceData(team)
+        
+        perfData.update(ratingData)        
+        
+        listData.append(perfData)
     return listData
 
-
+YEAR = 2018
+KEY = "gitchi"
 eventCode = str(YEAR) + KEY
-teamData = buildDraftList(eventCode, isDistrict)
+
+ggTeams = ["frc2846", "frc3244", "frc4607", "frc3102", "frc7886", "frc6047", 
+           "frc3275", "frc4230", "frc2512", "frc5690", "frc4009", "frc2177", 
+           "frc3130", "frc1816", "frc2491", "frc1732", "frc2169", "frc2175"]
+
 
 fileName = eventCode
+teamData = buildDraftList(None, False, ggTeams)
+
+
 
 if VALIDATE:
     fileName += "Validate"
     for team in teamData:
         team['actual'] = calcPoints(int(team['Team #']), eventCode)
-        
-        
-colOrder = ['Team', 'Play Rating', 'Overall Rating', 'Total Points', 'Event Max', 'Event Avg', 'Year Avg', 'Events']        
+    
+colOrder = ['Team', 'Avg OPR', 'Max OPR', 'Win %', 'Wins', 'Losses', 'Ties', 'Play Rating', 'Overall Rating', 'Total Points', 'Event Max', 'Event Avg', 'Year Avg', 'Events']        
 gen.listOfDictToCSV(fileName, teamData, colOrder)
