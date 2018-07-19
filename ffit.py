@@ -65,8 +65,10 @@ for idx, team in enumerate(teams):
         
         scales = [1.05, 1.0, 0.95, backup]
         position = status['alliance']['pick']
+        
+        scaleFactor = max([scales[position], .25])
 
-    total = (elimPoints + qualPoints + rankPoints) * scales[position]
+    total = (elimPoints + qualPoints + rankPoints) * scaleFactor
     
     data.append({'team': team[3:], 'rank': rank, 'quals': qualPoints, 'rankP': rankPoints, 'elims': elimPoints, 'total': total, 'factor': scales[position]})
 
