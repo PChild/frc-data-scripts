@@ -154,7 +154,7 @@ def getTeamRatingData(team, yearDepth=3):
     eventAvg = 0
     teamYears = tba.team_years(team)
     
-    if len(teamYears) > 0:
+    try:
         pastYears = sorted(teamYears[-yearDepth:], key=int, reverse=True)
         
         tmpYears = pastYears[:]
@@ -179,7 +179,9 @@ def getTeamRatingData(team, yearDepth=3):
             overallRating += yearPoints / pow(2, count * 2)
             teamTotal += yearPoints
         eventAvg = teamTotal / eventCount
-    
+    except Exception as e:
+        print(e)
+        
     teamKey = team
     if team[:3] == "frc":
         teamKey = team[3:]
@@ -212,23 +214,20 @@ def buildDraftList(key, isDistrict, eventTeams=None):
     return listData
 
 YEAR = 2018
-KEY = "gitchi"
-eventCode = str(YEAR) + KEY
-
-ggTeams = ["frc2846", "frc3244", "frc4607", "frc3102", "frc7886", "frc6047", 
-           "frc3275", "frc4230", "frc2512", "frc5690", "frc4009", "frc2177", 
-           "frc3130", "frc1816", "frc2491", "frc1732", "frc2169", "frc2175"]
-
-
-fileName = eventCode
-teamData = buildDraftList(None, False, ggTeams)
-
-
-
-if VALIDATE:
-    fileName += "Validate"
-    for team in teamData:
-        team['actual'] = calcPoints(int(team['Team #']), eventCode)
-    
-colOrder = ['Team', 'Avg OPR', 'Max OPR', 'Win %', 'Wins', 'Losses', 'Ties', 'Play Rating', 'Overall Rating', 'Total Points', 'Event Max', 'Event Avg', 'Year Avg', 'Events']        
-gen.listOfDictToCSV(fileName, teamData, colOrder)
+#KEY = "rbcn"
+#eventCode = str(YEAR) + KEY
+#
+#rcTeams = ['frc4362','frc5712' ]
+#
+#fileName = eventCode
+#teamData = buildDraftList(None, False, rcTeams)
+#
+#
+#
+#if VALIDATE:
+#    fileName += "Validate"
+#    for team in teamData:
+#        team['actual'] = calcPoints(int(team['Team #']), eventCode)
+#    
+#colOrder = ['Team', 'Avg OPR', 'Max OPR', 'Win %', 'Wins', 'Losses', 'Ties', 'Play Rating', 'Overall Rating', 'Total Points', 'Event Max', 'Event Avg', 'Year Avg', 'Events']        
+#gen.listOfDictToCSV(fileName, teamData, colOrder)
