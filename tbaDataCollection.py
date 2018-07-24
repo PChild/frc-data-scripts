@@ -130,19 +130,27 @@ def saveTeamAwards(year, team):
         try:
             teamYearAwards = []
             for event in eventData['Event']:
-                evAwards = pd.read_csv('tba/events/' + str(year) + '/' + event + '/' + event + '_awards.csv', index_col=False, names=['Award', 'Name', 'Team'])
-                teamAwards = evAwards[evAwards.Team == team]
+                awardsFile = 'tba/events/' + str(year) + '/' + event + '/' + event + '_awards.csv'
+                awardsPath = Path(awardsFile)
                 
-                for idx, row in teamAwards.iterrows():
-                    awardType = row['Award'].split('_')[1]
-                    awardName = row['Name']
-                    teamYearAwards.append({'Event': event, 'Type': awardType, 'Name': awardName})
+                if awardsPath.exists():
+                    evAwards = pd.read_csv(awardsFile, index_col=False, names=['Award', 'Name', 'Team'])
+                    
+                    if type(evAwards['Team'][0]) is not str:
+                        evAwards['Team'] = 'frc' + evAwards['Team'].astype(str)
+                    
+                    teamAwards = evAwards[evAwards.Team == team]
+                    
+                    for idx, row in teamAwards.iterrows():
+                        awardType = row['Award'].split('_')[1]
+                        awardName = row['Name']
+                        teamYearAwards.append({'Event': event, 'Type': awardType, 'Name': awardName})
             colOrder = ['Event', 'Type', 'Name']
             gen.listOfDictToCSV(fullPath, teamYearAwards, colOrder)
         except Exception as e:
             print(e)
 
-def removeThenSaveAwards(year, team):
+def removeThenSaveTeamAwards(year, team):
     removeTeamAwards(year, team)
     saveTeamAwards(year,team)
 
@@ -157,8 +165,8 @@ def main():
         #pool.map(saveEventOPRs, eventList)
         #pool.map(saveEventInfo, eventList)
 
-        #df = pd.read_csv('tba/teams/' + str(year) + '/teams.csv', names=['Teams'])
-        #pool.map(partial(removeThenSaveAwards, year), df['Teams'])
+        df = pd.read_csv('tba/teams/' + str(year) + '/teams.csv', names=['Teams'])
+        pool.map(partial(removeThenSaveTeamAwards, year), df['Teams'])
     pool.close()
     pool.join()
     

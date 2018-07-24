@@ -2,6 +2,7 @@ import sys
 import tbapy
 import json
 import pandas as pd
+from pathlib import Path
 import os
     
 def setup(apiKey="TBA_KEY", useEnv=True):
@@ -19,11 +20,22 @@ def setup(apiKey="TBA_KEY", useEnv=True):
     
     return tbapy.TBA(apiKey)
 
-def readTbaCsv(code, dataType, isTeam=False, year=None, names=None):
-    if isTeam:
-        return pd.read_csv('./tba/teams/'+ year + '/' + code + '/' + code + '_' + dataType +'.csv', names=names, skipinitialspace=True)
-    else:
-        return pd.read_csv('./tba/events/'+ code[:4] + '/' + code + '/' + code + '_' + dataType + '.csv', names=names, skipinitialspace=True)
+def readTeamCsv(key, dataType, year, names=None):
+    return csvHandler('./tba/teams/'+ str(year) + '/' + key + '/' + key + '_' + dataType +'.csv', names)
+    
+def readEventCsv(key, dataType, names=None):
+    return csvHandler('./tba/events/'+ key[:4] + '/' + key + '/' + key + '_' + dataType + '.csv', names)
+    
+def readTeamListCsv(year, names=None):
+    return csvHandler('./tba/teams/'+ str(year) + '/teams.csv', names)   
+
+def csvHandler(path, names):
+    filePath = Path(path)    
+    res = None    
+    if filePath.exists():
+        if filePath.stat().st_size > 0:
+            res = pd.read_csv(path, names=names, skipinitialspace=True)
+    return res
 
 def matchResult(team, match):
     teamColor = 'blue'
