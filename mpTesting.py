@@ -3,7 +3,8 @@ from functools import partial
 import gen
 
 year = 2018
-yearRange = 1
+yearRange = 5
+teamData = []
 
 years = range(year - yearRange + 1, year + 1)
 tba = gen.setup()
@@ -16,10 +17,10 @@ def teamEvents(year, team):
     eventKeys = [event['key'] for event in events]
     return {'team': team, 'year': year, 'events': eventKeys}
 
-def main():
-    global year
-    
-    teamKeys = []    
+def main(year):
+    global teamData
+    teamKeys = []
+    tmpData = []
     pool = Pool()
     
     mapData = pool.map(partial(teamsHelper, year), range(0, 16))
@@ -28,10 +29,11 @@ def main():
         teamKeys+= page
             
     for year in years:
-        teamData = pool.map(partial(teamEvents, year), teamKeys)
-
+        tmpData += pool.map(partial(teamEvents, year), teamKeys)    
+    teamData = tmpData
+    
     pool.close()
     pool.join()
              
 if __name__ == "__main__":
-    main()
+    main(year)

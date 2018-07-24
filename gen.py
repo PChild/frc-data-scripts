@@ -1,6 +1,7 @@
 import sys
 import tbapy
 import json
+import pandas as pd
 import os
     
 def setup(apiKey="TBA_KEY", useEnv=True):
@@ -17,6 +18,12 @@ def setup(apiKey="TBA_KEY", useEnv=True):
         apiKey = os.getenv(apiKey)
     
     return tbapy.TBA(apiKey)
+
+def readTbaCsv(code, dataType, isTeam=False, year=None, names=None):
+    if isTeam:
+        return pd.read_csv('./tba/teams/'+ year + '/' + code + '/' + code + '_' + dataType +'.csv', names=names, skipinitialspace=True)
+    else:
+        return pd.read_csv('./tba/events/'+ code[:4] + '/' + code + '/' + code + '_' + dataType + '.csv', names=names, skipinitialspace=True)
 
 def matchResult(team, match):
     teamColor = 'blue'
@@ -50,7 +57,15 @@ def progressBar(value, endvalue, bar_length=20):
 
         sys.stdout.write("\rPercent: [{0}] {1}%".format(arrow + spaces, int(round(percent * 100))))
         sys.stdout.flush()
-        
+    
+def listToCSV(filename, listObj):
+    f = open(filename + ".csv", 'w', encoding='utf-8')
+    
+    for item in listObj:
+        f.write(item + "\n")
+    f.close()
+    
+    
 def listOfDictToCSV(filename, listObj, colOrder=None):
     '''
     Saves a list of flat dictionaries out to a csv.
