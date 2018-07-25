@@ -21,13 +21,24 @@ def setup(apiKey="TBA_KEY", useEnv=True):
     return tbapy.TBA(apiKey)
 
 def readTeamCsv(key, dataType, year, names=None):
+    key = teamString(key)    
     return csvHandler('./tba/teams/'+ str(year) + '/' + key + '/' + key + '_' + dataType +'.csv', names)
     
 def readEventCsv(key, dataType, names=None):
     return csvHandler('./tba/events/'+ key[:4] + '/' + key + '/' + key + '_' + dataType + '.csv', names)
     
-def readTeamListCsv(year, names=None):
-    return csvHandler('./tba/teams/'+ str(year) + '/teams.csv', names)   
+def readTeamListCsv(year):
+    return csvHandler('./tba/teams/'+ str(year) + '/teams.csv', names=['Teams'])   
+
+def teamEventMatches(team, event):
+    res = None
+    try:
+        eM = readEventCsv(event, 'matches', names=['key', 'r1', 'r2', 'r3', 'b1', 'b2', 'b3', 'rScore', 'bScore'])
+        res = eM[(eM.r1 == team) | (eM.r2 == team) | (eM.r3 == team) | (eM.b1 == team) | (eM.b2 == team) | (eM.b3 == team)]
+    except Exception as e:
+        print("Error fetching matches for event", event)
+        print(e)
+    return res
 
 def csvHandler(path, names):
     filePath = Path(path)    
@@ -37,23 +48,29 @@ def csvHandler(path, names):
             res = pd.read_csv(path, names=names, skipinitialspace=True)
     return res
 
-def matchResult(team, match):
-    teamColor = 'blue'
-    result = 'loss'
-    
+def teamString(team):
     if 'frc' not in str(team):
         team = 'frc' + str(team)
+    return team
     
-    if str(team) in match['alliances']['red']['team_keys']:
-        teamColor = 'red'
-        
-    if match['winning_alliance'] == teamColor:
-        result = 'win'
+def teamNumber(team):
+    if str(team)[:3] == "frc":
+        team = str(team)[3:]
+    return int(team)
+
+def matchResult(team, match):
+    onRed = (match['r1'] == team) or (match['r2'] == team) or (match['r3'] == team)
+    onBlue = not onRed
+    redWins = match['rScore'] > match['bScore']
+    blueWins = match['bScore'] > match['rScore']
+    isTie = match['rScore'] == match['bScore']
     
-    if match['winning_alliance'] == '':
-        result = 'tie'
-    
-    return result 
+    if isTie:
+        return 'TIE'
+    elif (onBlue and blueWins) or (onRed and redWins):
+        return 'WIN'
+    else:
+        return 'LOSS'
 
 def progressBar(value, endvalue, bar_length=20):
         '''

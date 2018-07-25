@@ -6,17 +6,40 @@ import gen
 
 tba = gen.setup()
 
-def saveEventInfo(event):
-    filePath = './tba/events/' + event[:4] + '/' + event + '/'
-    fileName = event + '_info'
+def filePathHandler(teamsOrEvents, code=None, dataType=None, year=None):
+    if teamsOrEvents == 'events':
+        year = code[:4]
+    if teamsOrEvents == 'teams' and code == None:
+        filePath = './tba/teams/' + str(year) + '/'
+        fileName = dataType
+    else:
+        filePath = './tba/' + teamsOrEvents +'/' + str(year) + '/' + code + '/'
+        fileName = code + '_' + dataType
     fullPath = filePath + fileName
     outputPath = Path(filePath)
     outputFile = Path(fullPath + '.csv')
     
     if not outputPath.exists():
         outputPath.mkdir()
+        
+    return [outputFile.exists(), fullPath]
+
+def saveTeamYearMatches(year, team):
+    fileExists, fullPath = filePathHandler('teams', team, 'matches', year)
     
-    if not outputFile.exists():
+    try:
+        teamEvents = gen.readTeamCsv(team, 'events', year)
+        teamMatches = pd.concat(gen.teamEventMatches(team, event) for event in teamEvents['Event'])
+        
+        teamMatches.to_csv(fullPath + '.csv', index=False)
+    except Exception as e:
+        print(e)
+        
+
+def saveEventInfo(event):
+    fileExists, fullPath = filePathHandler('events', event, 'info')
+
+    if not fileExists:
         try:
             raw = tba.event(event)
             
@@ -30,16 +53,9 @@ def saveEventInfo(event):
             print(e)
 
 def saveEventRankings(event):
-    filePath = './tba/events/' + event[:4] + '/' + event + '/'
-    fileName = event + '_rankings'
-    fullPath = filePath + fileName
-    outputPath = Path(filePath)
-    outputFile = Path(filePath + '.csv')
-    
-    if not outputPath.exists():
-        outputPath.mkdir()
-    
-    if not outputFile.exists():
+    fileExists, fullPath = filePathHandler('events', event, 'rankings')
+
+    if not fileExists:
         try:
             rawRanks = tba.event_rankings(event)['rankings']
             
@@ -50,44 +66,35 @@ def saveEventRankings(event):
             print(e)
 
 def saveEventOPRs(event):
-    filePath = './tba/events/' + event[:4] + '/' + event + '/' + event + '_opr'
-    outputFile = Path(filePath + '.csv')
+    fileExists, fullPath = filePathHandler('events', event, 'opr')
     
-    if not outputFile.exists():
+    if not fileExists:
         try:
             rawRanks = tba.event_oprs(event)['oprs']
             
             oprData = sorted([{'OPR': rawRanks[team], 'Team': team} for team in rawRanks], key = lambda k: k['OPR'], reverse=True)
             colOrder = ['OPR', 'Team']
-            gen.listOfDictToCSV(filePath, oprData, colOrder)
-        except:
-            pass
+            gen.listOfDictToCSV(fullPath, oprData, colOrder)
+        except Exception as e:
+            print(e)
 
 def saveTeamList(year):
-    filePath = './tba/teams/' + str(year) + '/teams'
-    outputFile = Path(filePath + '.csv')
-    
-    if not outputFile.exists():
+    fileExists, fullPath = filePathHandler('teams', None, 'teams', year)
+
+    if not fileExists:
         try:
             teams = []
             for page in range(0,16):
                 teams += tba.teams(page, year, False, True)
 
-            gen.listToCSV(filePath, teams)
+            gen.listToCSV(fullPath, teams)
         except Exception as e:
             print(e)    
     
 def saveTeamEvents(year, team):
-    filePath = './tba/teams/' + str(year) + '/' + team + '/'
-    fileName = team + '_events'
-    fullPath = filePath + fileName
-    outputPath = Path(filePath)
-    outputFile = Path(fullPath + '.csv')
+    fileExists, fullPath = filePathHandler('teams', team, 'events', year)
     
-    if not outputPath.exists():
-        outputPath.mkdir()
-    
-    if not outputFile.exists():
+    if not fileExists:
         try:
             raw = tba.team_events(team, year)
             
@@ -102,39 +109,24 @@ def saveTeamEvents(year, team):
             print(e)
 
 def removeTeamAwards(year, team):
-    filePath = './tba/teams/' + str(year) + '/' + team + '/'
-    fileName = team + '_awards.csv'  
-    fullPath = filePath + fileName
-    
+    fileExists, fullPath = filePathHandler('teams', team, 'awards', year)
     outFile = Path(fullPath)    
     
-    if outFile.exists():
+    if fileExists:
         outFile.unlink()
     
-
 def saveTeamAwards(year, team):
-    filePath = './tba/teams/' + str(year) + '/' + team + '/'
-    fileName = team + '_awards'  
-    fullPath = filePath + fileName
-        
-    outputPath = Path(filePath)
-    outputFile = Path(fullPath + '.csv')
+    fileExists, fullPath = filePathHandler('teams', team, 'awards', year)    
+    eventData = gen.readTeamCsv(team, 'events, year')
     
-
-    eventData = pd.read_csv('tba/teams/' + str(year) + '/' + team + '/' + team + '_events.csv')
-    
-    if not outputPath.exists():
-        outputPath.mkdir()
-    
-    if not outputFile.exists():
+    if not fileExists:
         try:
             teamYearAwards = []
             for event in eventData['Event']:
-                awardsFile = 'tba/events/' + str(year) + '/' + event + '/' + event + '_awards.csv'
-                awardsPath = Path(awardsFile)
-                
-                if awardsPath.exists():
-                    evAwards = pd.read_csv(awardsFile, index_col=False, names=['Award', 'Name', 'Team'])
+                awardsExist, awardsPath = filePathHandler('events', event, 'awards')
+
+                if awardsExist:
+                    evAwards = pd.read_csv(awardsPath +'.csv', index_col=False, names=['Award', 'Name', 'Team'])
                     
                     if type(evAwards['Team'][0]) is not str:
                         evAwards['Team'] = 'frc' + evAwards['Team'].astype(str)
@@ -165,8 +157,8 @@ def main():
         #pool.map(saveEventOPRs, eventList)
         #pool.map(saveEventInfo, eventList)
 
-        df = pd.read_csv('tba/teams/' + str(year) + '/teams.csv', names=['Teams'])
-        pool.map(partial(removeThenSaveTeamAwards, year), df['Teams'])
+        teamList = gen.readTeamListCsv(year)
+        pool.map(partial(saveTeamYearMatches, year), teamList['Teams'])
     pool.close()
     pool.join()
     
