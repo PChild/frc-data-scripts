@@ -8,7 +8,7 @@ tba = gen.setup()
 VALIDATE = False
 isDistrict = False
 
-def getPerformanceData(team):
+def getPerformanceData(team, year):
     team = gen.teamString(team)
     oprs = []
     wins = 0
@@ -16,7 +16,7 @@ def getPerformanceData(team):
     ties = 0
     
     try:
-        matches = gen.readTeamCsv(team, 'matches', YEAR)  
+        matches = gen.readTeamCsv(team, 'matches', year)  
         if len(matches) > 0:
             for idx, match in matches.iterrows():       
                 wins += 'WIN' == gen.matchResult(team, match)
@@ -26,7 +26,7 @@ def getPerformanceData(team):
         print("Could not retrieve matches for", team)
         
     try:
-        events = gen.readTeamCsv(team, 'events', YEAR)
+        events = gen.readTeamCsv(team, 'events', year)
         if len(events) > 0:    
             for idx, e in events.iterrows():
                 if e['Type'] in range(0,10):
@@ -177,7 +177,7 @@ def getTeamEventPoints(team, event):
             awardPoints = getAwardPoints(team, event, eventType)
     return [playPoints, awardPoints]
 
-def getTeamRatingData(team, yearDepth=3):
+def getTeamRatingData(team, yearDepth=3, YEAR=None):
     overallRating = 0
     playRating = 0
     teamTotal = 0
@@ -226,7 +226,7 @@ def getTeamRatingData(team, yearDepth=3):
             'Events': eventCount, 
             'Play Rating': playRating}
 
-def buildDraftList(key, isDistrict, eventTeams=None):
+def buildDraftList(key, isDistrict, eventTeams=None, year=None):
     if eventTeams:
       teamList = eventTeams  
     elif isDistrict:
@@ -236,29 +236,33 @@ def buildDraftList(key, isDistrict, eventTeams=None):
     listData = []
     for idx, team in enumerate(teamList):
         print(team)
-        ratingData = getTeamRatingData(team)
-        perfData = getPerformanceData(team)
+        ratingData = getTeamRatingData(team, year)
+        perfData = getPerformanceData(team, year)
         
         perfData.update(ratingData)        
         
         listData.append(perfData)
     return listData
 
-YEAR = 2018
-KEY = "audd"
-eventCode = str(YEAR) + KEY
-
-eventTeams = [3132, 4537, 4613, 4729, 4774, 4801, 4802, 5331, 5584, 5876, 5985, 
-           5988, 6035, 6050, 6434, 6476, 6508, 6510, 6525, 6575, 6579, 6836, 
-           7023, 7124, 7129, 7278]
-
-fileName = eventCode
-teamData = buildDraftList(None, False, eventTeams)
-
-if VALIDATE:
-    fileName += "Validate"
-    for team in teamData:
-        team['actual'] = getTeamEventPoints(int(team['Team #']), eventCode)
+def main():
+    YEAR = 2018
+    KEY = "audd"
+    eventCode = str(YEAR) + KEY
     
-colOrder = ['Team', 'Avg OPR', 'Max OPR', 'Win %', 'Wins', 'Losses', 'Ties', 'Play Rating', 'Overall Rating', 'Total Points', 'Event Max', 'Event Avg', 'Year Avg', 'Events']        
-gen.listOfDictToCSV(fileName, teamData, colOrder)
+    eventTeams = [3132, 4537, 4613, 4729, 4774, 4801, 4802, 5331, 5584, 5876, 5985, 
+               5988, 6035, 6050, 6434, 6476, 6508, 6510, 6525, 6575, 6579, 6836, 
+               7023, 7124, 7129, 7278]
+    
+    fileName = eventCode
+    teamData = buildDraftList(None, False, eventTeams, YEAR)
+    
+    if VALIDATE:
+        fileName += "Validate"
+        for team in teamData:
+            team['actual'] = getTeamEventPoints(int(team['Team #']), eventCode)
+        
+    colOrder = ['Team', 'Avg OPR', 'Max OPR', 'Win %', 'Wins', 'Losses', 'Ties', 'Play Rating', 'Overall Rating', 'Total Points', 'Event Max', 'Event Avg', 'Year Avg', 'Events']        
+    gen.listOfDictToCSV(fileName, teamData, colOrder)
+
+if __name__ == '__main__':
+    main()
