@@ -119,7 +119,7 @@ def removeTeamAwards(year, team):
     
 def saveTeamAwards(year, team):
     fileExists, fullPath = filePathHandler('teams', team, 'awards', year)    
-    eventData = gen.readTeamCsv(team, 'events, year')
+    eventData = gen.readTeamCsv(team, 'events', year)
     
     if not fileExists:
         try:
@@ -150,17 +150,19 @@ def removeThenSaveTeamAwards(year, team):
 
 def main():
     pool = Pool()
-    #pool.map(saveTeamList, range(1992, 2019))
+    pool.map(saveTeamList, range(1992, 2019))
     
     for year in range(1992, 2019):
         print("On year", year)
         eventList = tba.events(year, False, True)
-        #pool.map(saveEventRankings, eventList)
+        pool.map(saveEventRankings, eventList)
         pool.map(saveEventOPRs, eventList)
         pool.map(saveEventInfo, eventList)
 
-        #teamList = gen.readTeamListCsv(year)
-        #pool.map(partial(saveTeamYearMatches, year), teamList['Teams'])
+        teamList = gen.readTeamListCsv(year)
+        pool.map(partial(saveTeamEvents, year), teamList['Teams'])
+        pool.map(partial(saveTeamAwards, year), teamList['Teams'])
+        pool.map(partial(saveTeamYearMatches, year), teamList['Teams'])
     pool.close()
     pool.join()
     

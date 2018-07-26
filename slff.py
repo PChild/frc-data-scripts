@@ -63,12 +63,13 @@ def getPerformanceData(team, year):
             'Ties': ties, 
             'Win %': winPercent}
 
-def getTeamYears(team):
+def getTeamYears(team, YEAR):
     team = gen.teamString(team)    
     teamYears = []
+    repo = gen.getRepoPath()
     
     for year in range(1992, YEAR + 1):
-        yearPath = Path('./tba/teams/' + str(year) + '/' + team + '/')
+        yearPath = Path(repo + 'teams/' + str(year) + '/' + team + '/')
         
         if yearPath.exists():
             teamYears.append(year)
@@ -185,7 +186,7 @@ def getTeamRatingData(team, yearDepth=3, YEAR=None):
     eventCount = 0
     eventAvg = 0
     team = gen.teamString(team)
-    teamYears = getTeamYears(team)
+    teamYears = getTeamYears(team, YEAR)
     
     pastYears = sorted(teamYears[-yearDepth:], key=int, reverse=True)
     
