@@ -7,13 +7,14 @@ import gen
 tba = gen.setup()
 
 def filePathHandler(teamsOrEvents, code=None, dataType=None, year=None):
+    repo = gen.getRepoPath()
     if teamsOrEvents == 'events':
         year = code[:4]
     if teamsOrEvents == 'teams' and code == None:
-        filePath = './tba/teams/' + str(year) + '/'
+        filePath = repo + 'teams/' + str(year) + '/'
         fileName = dataType
     else:
-        filePath = './tba/' + teamsOrEvents +'/' + str(year) + '/' + code + '/'
+        filePath = repo + teamsOrEvents +'/' + str(year) + '/' + code + '/'
         fileName = code + '_' + dataType
     fullPath = filePath + fileName
     outputPath = Path(filePath)
@@ -27,13 +28,14 @@ def filePathHandler(teamsOrEvents, code=None, dataType=None, year=None):
 def saveTeamYearMatches(year, team):
     fileExists, fullPath = filePathHandler('teams', team, 'matches', year)
     
-    try:
-        teamEvents = gen.readTeamCsv(team, 'events', year)
-        teamMatches = pd.concat(gen.teamEventMatches(team, event) for event in teamEvents['Event'])
-        
-        teamMatches.to_csv(fullPath + '.csv', index=False)
-    except Exception as e:
-        print(e)
+    if not fileExists:
+        try:
+            teamEvents = gen.readTeamCsv(team, 'events', year)
+            teamMatches = pd.concat(gen.teamEventMatches(team, event) for event in teamEvents['Event'])
+            
+            teamMatches.to_csv(fullPath + '.csv', index=False)
+        except Exception as e:
+            print(e)
         
 
 def saveEventInfo(event):
@@ -152,13 +154,13 @@ def main():
     
     for year in range(1992, 2019):
         print("On year", year)
-        #eventList = tba.events(year, False, True)
+        eventList = tba.events(year, False, True)
         #pool.map(saveEventRankings, eventList)
-        #pool.map(saveEventOPRs, eventList)
-        #pool.map(saveEventInfo, eventList)
+        pool.map(saveEventOPRs, eventList)
+        pool.map(saveEventInfo, eventList)
 
-        teamList = gen.readTeamListCsv(year)
-        pool.map(partial(saveTeamYearMatches, year), teamList['Teams'])
+        #teamList = gen.readTeamListCsv(year)
+        #pool.map(partial(saveTeamYearMatches, year), teamList['Teams'])
     pool.close()
     pool.join()
     

@@ -3,6 +3,7 @@ import tbapy
 import json
 import pandas as pd
 from pathlib import Path
+from git import Repo
 import os
     
 def setup(apiKey="TBA_KEY", useEnv=True):
@@ -21,14 +22,17 @@ def setup(apiKey="TBA_KEY", useEnv=True):
     return tbapy.TBA(apiKey)
 
 def readTeamCsv(key, dataType, year, names=None):
-    key = teamString(key)    
-    return csvHandler('./tba/teams/'+ str(year) + '/' + key + '/' + key + '_' + dataType +'.csv', names)
+    key = teamString(key)
+    repo = getRepoPath()
+    return csvHandler(repo + 'teams/'+ str(year) + '/' + key + '/' + key + '_' + dataType +'.csv', names)
     
 def readEventCsv(key, dataType, names=None):
-    return csvHandler('./tba/events/'+ key[:4] + '/' + key + '/' + key + '_' + dataType + '.csv', names)
+    repo = getRepoPath()
+    return csvHandler(repo + 'events/'+ key[:4] + '/' + key + '/' + key + '_' + dataType + '.csv', names)
     
 def readTeamListCsv(year):
-    return csvHandler('./tba/teams/'+ str(year) + '/teams.csv', names=['Teams'])   
+    repo = getRepoPath()
+    return csvHandler(repo + 'teams/'+ str(year) + '/teams.csv', names=['Teams'])   
 
 def teamEventMatches(team, event):
     res = None
@@ -140,3 +144,41 @@ def writeJsonFile(filename, dictionary):
     '''
     with open(filename + '.json', 'w') as outfile:
         json.dump(dictionary, outfile)
+        
+def updateRepoData(file, repoData):
+    if file is None:
+        file = 'repoSettings.csv'
+        
+    pd.DataFrame([repoData], columns=['Repo']).to_csv(file, index=False)
+    
+def getRepoPath(file=None):
+    if file is None:
+        file = 'repoSettings.csv'
+        
+    defaultRepoLocation = '../tba/'
+    if not Path(file).exists():
+        updateRepoData(file, defaultRepoLocation)
+
+    return pd.read_csv(file)['Repo'].values[0]     
+
+def handleRepo():
+    tbaPath = getRepoPath()
+    tbaGitUrl = 'https://github.com/the-blue-alliance/the-blue-alliance-data.git'
+    tbaDir = Path(tbaPath)
+
+    if not tbaDir.exists():
+        tbaDir.mkdir()
+    
+    dotGitExists = Path(tbaPath + '.git/').exists()
+    
+    if dotGitExists:
+        repo = Repo(tbaPath)        
+        isBehind = (sum(1 for c in repo.iter_commits('master..origin/master')) > 0)
+        
+        if isBehind:
+            repo.git.pull()
+    
+    if not dotGitExists:
+        Repo.clone_from(tbaGitUrl, tbaPath)
+    else:
+        print('Up to date!')
