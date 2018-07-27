@@ -28,10 +28,9 @@ def getPerformanceData(team, year):
     try:
         events = gen.readTeamCsv(team, 'events', year)
         if len(events) > 0:    
-            for idx, e in events.iterrows():
-                if e['Type'] in range(0,10):
-                    eOprs = gen.readEventCsv(e['Event'], 'opr')
+            for idx, e in events.iterrows():                    
                     try:
+                        eOprs = gen.readEventCsv(e['Event'], 'opr')
                         teamOPR = eOprs[eOprs.Team == team]['OPR'].values[0]
                         oprs.append(teamOPR)
                     except Exception as e:
@@ -48,7 +47,7 @@ def getPerformanceData(team, year):
         avgOPR = stat.mean(oprs)
     
     played = wins + losses + ties
-    winPercent = .3
+    winPercent = 0
     
     if played > 0:
         winPercent = wins / played
@@ -237,7 +236,7 @@ def buildDraftList(key, isDistrict, eventTeams=None, year=None):
     listData = []
     for idx, team in enumerate(teamList):
         print(team)
-        ratingData = getTeamRatingData(team, year)
+        ratingData = getTeamRatingData(team, 3, year)
         perfData = getPerformanceData(team, year)
         
         perfData.update(ratingData)        
@@ -247,15 +246,16 @@ def buildDraftList(key, isDistrict, eventTeams=None, year=None):
 
 def main():
     YEAR = 2018
-    KEY = "audd"
+    KEY = "ilrr"
     eventCode = str(YEAR) + KEY
     
-    eventTeams = [3132, 4537, 4613, 4729, 4774, 4801, 4802, 5331, 5584, 5876, 5985, 
-               5988, 6035, 6050, 6434, 6476, 6508, 6510, 6525, 6575, 6579, 6836, 
-               7023, 7124, 7129, 7278]
+    eventTeams = [81, 111, 167, 171, 269, 461, 930, 967, 1625, 1646, 1732,
+                  1736, 1739, 1792, 2039, 2081, 2194, 2202, 2451, 2704, 3352,
+                  4096, 4213, 4241, 4247, 4272, 4292, 4296, 4655, 5041, 5442,
+                  5822, 5847, 5934, 6237, 6419]
     
     fileName = eventCode
-    teamData = buildDraftList(None, False, eventTeams, YEAR)
+    teamData = buildDraftList(KEY, False, eventTeams, YEAR)
     
     if VALIDATE:
         fileName += "Validate"
