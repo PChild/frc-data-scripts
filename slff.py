@@ -74,7 +74,7 @@ def getTeamYears(team, YEAR):
             teamYears.append(year)
     return teamYears
             
-def getAwardPoints(team, event, eventType):
+def getAwardPoints(team, event, eventType, useTba=False):
     ROBOT_AWARDS = [16, 17, 20, 21, 29, 71]
     OTHER_AWARDS = [ 5, 11, 13, 14, 18, 22, 27, 30]
     NO_POINTS = [1, 2]
@@ -91,90 +91,138 @@ def getAwardPoints(team, event, eventType):
                  'CMP': {CA: 110, EI: 60, RAS: 35, RI: 20, WF: 30, DEANS: 15, CAF: 90, 'ROBOT': 30, 'OTHER': 10, 'NONE': 0}}
     
     awardPoints = 0
-    tya = gen.readTeamCsv(team, 'awards', event[:4])
-    if tya is not None:
-        teamEventAwards = tya[tya.Event == event]
-        
-        for idx, row in teamEventAwards.iterrows():
-            awardType = row['Type']
+    
+    if useTba:
+        try:
+            tya = tba.team_awards(team, None, event)
+            for award in tya:
+                awardType = award['award_type']
+                
+                if awardType in ROBOT_AWARDS:
+                    awardType = 'ROBOT'
+                if awardType in OTHER_AWARDS:
+                    awardType = 'OTHER'
+                if awardType in NO_POINTS:
+                    awardType = 'NONE'
+                awardPoints += awardData[eventType][awardType]
+        except:
+            pass
+    else:
+        tya = gen.readTeamCsv(team, 'awards', event[:4])
+        if tya is not None:
+            teamEventAwards = tya[tya.Event == event]
             
-            if awardType in ROBOT_AWARDS:
-                awardType = 'ROBOT'
-            if awardType in OTHER_AWARDS:
-                awardType = 'OTHER'
-            if awardType in NO_POINTS:
-                awardType = 'NONE'
-            awardPoints += awardData[eventType][awardType]
+            for idx, row in teamEventAwards.iterrows():
+                awardType = row['Type']
+                
+                if awardType in ROBOT_AWARDS:
+                    awardType = 'ROBOT'
+                if awardType in OTHER_AWARDS:
+                    awardType = 'OTHER'
+                if awardType in NO_POINTS:
+                    awardType = 'NONE'
+                awardPoints += awardData[eventType][awardType]
     return awardPoints
 
-def getPlayPoints(team, event, eventType):
+def getPlayPoints(team, event, eventType, useTba=False, breakDown=False, eventSize=None):
     draftPoints = 0
     rankPoints = 0
     elimPoints = 0
     
-    teamMatches = gen.teamEventMatches(team, event)
-    
-    tmpRk = []
-    try:
-        rK = gen.readEventCsv(event, 'rankings')
-        tmpRk = rK[rK.Team == team]
-    except:
-        pass
-    if len(tmpRk) > 0:
-        teamRank = rK[rK.Team == team]['Rank'].iloc[0]
-        teamCount = len(rK)
-        
-        alpha = 1.07
-        rankPoints = math.ceil(abs(erfinv( (teamCount - 2 * teamRank + 2) /  (alpha * teamCount)) * 10 / erfinv( 1 / alpha ) + 12 ))
-    
-    names = ['captain', 'firstPick', 'secondPick']
-    if eventType == 'CMP':
-        names = ['captain', 'firstPick', 'secondPick', 'thirdPick']
-    aL = gen.readEventCsv(event, 'alliances', names)
-    aLL = aL[(aL.captain == team) | (aL.firstPick == team) | (aL.secondPick == team)]
-    
-    if len(aLL) > 0:
-        alliance = {'pick': 9, 'number': 9}
-        alliance['number'] = aLL.index.values[0]
-        
-        if aLL['captain'].values[0] == team:
-            alliance['pick'] = 0
-        elif aLL['firstPick'].values[0] == team:
-            alliance['pick'] = 1
-        elif aLL['secondPick'].values[0] == team:
-            alliance['pick'] = 2
-
-        if alliance['pick'] < 2:
-            draftPoints = 17 - int(alliance['number'])
-        elif alliance['pick'] == 2:
-            draftPoints = int(alliance['number'])
-
-    #Find points for playing in elims
-    for idx, match in teamMatches.iterrows():
-        if match['key'].split('_')[1][:2] != 'qm':
-            result = gen.matchResult(team, match)
+    if useTba:
+        try:
+            teamMatches = tba.team_matches(team, event, None, True)
+            teamStats = tba.team_status(team, event)
             
-            if result == 'WIN':
-                elimPoints += 5
+            alliance = teamStats['alliance']           
+            if alliance is not None:
+                if alliance['pick'] < 2:
+                    draftPoints = 17 - alliance['number']
+                elif alliance['pick'] == 2:
+                    draftPoints = alliance['number']
+            if eventSize is not None:
+                teamCount = eventSize
+            else:
+                teamCount = teamStats['qual']['num_teams']
+                
+            teamRank = teamStats['qual']['ranking']['rank']
+            alpha = 1.07
+            rankPoints = math.ceil(abs(erfinv( (teamCount - 2 * teamRank + 2) /  (alpha * teamCount)) * 10 / erfinv( 1 / alpha ) + 12 ))
+                
+            for match in teamMatches:
+                if match['comp_level'] != "qm":
+                    if gen.matchResult(team, match, useTba) == 'WIN':
+                        elimPoints += 5
+        except:
+            pass
+    else:
+        teamMatches = gen.teamEventMatches(team, event)
+        
+        tmpRk = []
+        try:
+            rK = gen.readEventCsv(event, 'rankings')
+            tmpRk = rK[rK.Team == team]
+        except:
+            pass
+        if len(tmpRk) > 0:
+            teamRank = rK[rK.Team == team]['Rank'].iloc[0]
+            teamCount = len(rK)
+            
+            alpha = 1.07
+            rankPoints = math.ceil(abs(erfinv( (teamCount - 2 * teamRank + 2) /  (alpha * teamCount)) * 10 / erfinv( 1 / alpha ) + 12 ))
+        
+        names = ['captain', 'firstPick', 'secondPick']
+        if eventType == 'CMP':
+            names = ['captain', 'firstPick', 'secondPick', 'thirdPick']
+        aL = gen.readEventCsv(event, 'alliances', names)
+        aLL = aL[(aL.captain == team) | (aL.firstPick == team) | (aL.secondPick == team)]
+        
+        if len(aLL) > 0:
+            alliance = {'pick': 9, 'number': 9}
+            alliance['number'] = aLL.index.values[0]
+            
+            if aLL['captain'].values[0] == team:
+                alliance['pick'] = 0
+            elif aLL['firstPick'].values[0] == team:
+                alliance['pick'] = 1
+            elif aLL['secondPick'].values[0] == team:
+                alliance['pick'] = 2
     
-    return draftPoints + rankPoints + elimPoints
+            if alliance['pick'] < 2:
+                draftPoints = 17 - int(alliance['number'])
+            elif alliance['pick'] == 2:
+                draftPoints = int(alliance['number'])
+    
+        #Find points for playing in elims
+        for idx, match in teamMatches.iterrows():
+            if match['key'].split('_')[1][:2] != 'qm':
+                result = gen.matchResult(team, match, useTba)
+                
+                if result == 'WIN':
+                    elimPoints += 5
+    
+    res = draftPoints + rankPoints + elimPoints
+    if breakDown:
+        res = [draftPoints, rankPoints, elimPoints] 
+    return res
 
-def getTeamEventPoints(team, event):
+def getTeamEventPoints(team, event, useTba=False, eventSize=None):
     awardPoints = 0
     playPoints = 0
 
     team = gen.teamString(team)    
-    
-    #Fetch event info, do this first since we only want to really process official events.             
-    eventInfo = gen.readEventCsv(event, 'info')
-    isChamps = eventInfo['Type'][0] in range(3, 5)
-    isOfficial = eventInfo['Type'][0] in range(0, 7)    
+
+    if useTba:
+        eventInfo = tba.event(event)
+        isChamps = eventInfo['event_type'] in range(3,5)
+    else:
+        eventInfo = gen.readEventCsv(event, 'info')
+        isChamps = eventInfo['Type'][0] in range(3, 5)
     eventType = 'CMP' if isChamps else 'REG'     
     
     if eventInfo is not None:
-        if isOfficial:
-            playPoints = getPlayPoints(team, event, eventType)
-            awardPoints = getAwardPoints(team, event, eventType)
+        playPoints = getPlayPoints(team, event, eventType, useTba, False, eventSize)
+        awardPoints = getAwardPoints(team, event, eventType, useTba)
     return [playPoints, awardPoints]
 
 def getTeamRatingData(team, yearDepth=3, YEAR=None):
@@ -218,13 +266,11 @@ def getTeamRatingData(team, yearDepth=3, YEAR=None):
     teamKey = gen.teamNumber(team)
     
     return {'Team': teamKey, 
-            'Overall Rating': overallRating, 
             'Event Max': eventMax, 
             'Total Points': teamTotal, 
             'Year Avg': teamTotal / yearDepth, 
             'Event Avg': eventAvg, 
-            'Events': eventCount, 
-            'Play Rating': playRating}
+            'Events': eventCount}
 
 def buildDraftList(key, isDistrict, eventTeams=None, year=None):
     if eventTeams:
@@ -235,8 +281,7 @@ def buildDraftList(key, isDistrict, eventTeams=None, year=None):
         teamList = tba.event_teams(key, False, True)
     listData = []
     for idx, team in enumerate(teamList):
-        print(team)
-        ratingData = getTeamRatingData(team, 3, year)
+        ratingData = getTeamRatingData(team, 1, year)
         perfData = getPerformanceData(team, year)
         
         perfData.update(ratingData)        
@@ -244,15 +289,29 @@ def buildDraftList(key, isDistrict, eventTeams=None, year=None):
         listData.append(perfData)
     return listData
 
+def teamListHelper(event):
+    teams = []
+    matches = tba.event_matches(event)
+    for match in matches:
+        for team in match['alliances']['red']['team_keys']:
+            if team not in teams:
+                teams.append(team)
+        for team in match['alliances']['blue']['team_keys']:
+            if team not in teams:
+                teams.append(team)
+    return teams
+
+def scoreEvent(event):
+    teams = teamListHelper(event)
+    teamScores = sorted([{'Team': team[3:], 'Score': getTeamEventPoints(team, event, True, len(teams))[0]} for team in teams], key = lambda k: k['Score'], reverse=True)
+    gen.listOfDictToCSV(event +"_scores", teamScores, ['Team', 'Score'])
+
 def main():
     YEAR = 2018
-    KEY = "ilrr"
+    KEY = "all"
     eventCode = str(YEAR) + KEY
     
-    eventTeams = [81, 111, 167, 171, 269, 461, 930, 967, 1625, 1646, 1732,
-                  1736, 1739, 1792, 2039, 2081, 2194, 2202, 2451, 2704, 3352,
-                  4096, 4213, 4241, 4247, 4272, 4292, 4296, 4655, 5041, 5442,
-                  5822, 5847, 5934, 6237, 6419]
+    eventTeams = gen.readTeamListCsv(YEAR)['Teams'].tolist()
     
     fileName = eventCode
     teamData = buildDraftList(KEY, False, eventTeams, YEAR)
@@ -262,7 +321,7 @@ def main():
         for team in teamData:
             team['actual'] = getTeamEventPoints(int(team['Team #']), eventCode)
         
-    colOrder = ['Team', 'Avg OPR', 'Max OPR', 'Win %', 'Wins', 'Losses', 'Ties', 'Play Rating', 'Overall Rating', 'Total Points', 'Event Max', 'Event Avg', 'Year Avg', 'Events']        
+    colOrder = ['Team', 'Avg OPR', 'Max OPR', 'Win %', 'Wins', 'Losses', 'Ties', 'Total Points', 'Event Max', 'Event Avg', 'Year Avg', 'Events']        
     gen.listOfDictToCSV(fileName, teamData, colOrder)
 
 if __name__ == '__main__':

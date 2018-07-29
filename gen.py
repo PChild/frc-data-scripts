@@ -62,12 +62,19 @@ def teamNumber(team):
         team = str(team)[3:]
     return int(team)
 
-def matchResult(team, match):
-    onRed = (match['r1'] == team) or (match['r2'] == team) or (match['r3'] == team)
-    onBlue = not onRed
-    redWins = match['rScore'] > match['bScore']
-    blueWins = match['bScore'] > match['rScore']
-    isTie = match['rScore'] == match['bScore']
+def matchResult(team, match, useTba):
+    if useTba:
+        onRed = team in match['alliances']['red']['team_keys']
+        onBlue = not onRed 
+        redWins = match['winning_alliance'] == 'red'
+        blueWins = match['winning_alliance'] == 'blue' 
+        isTie = match['winning_alliance'] == ''
+    else:
+        onRed = (match['r1'] == team) or (match['r2'] == team) or (match['r3'] == team)
+        onBlue = not onRed
+        redWins = match['rScore'] > match['bScore']
+        blueWins = match['bScore'] > match['rScore']
+        isTie = match['rScore'] == match['bScore']
     
     if isTie:
         return 'TIE'
