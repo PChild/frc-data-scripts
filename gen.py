@@ -26,15 +26,16 @@ def readTeamCsv(key, dataType, year, names=None):
     repo = getRepoPath()
     return csvHandler(repo + 'teams/'+ str(year) + '/' + key + '/' + key + '_' + dataType +'.csv', names)
     
-def readEventCsv(key, dataType, names=None):
+def readEventCsv(key, dataType, names=None, index=False):
     repo = getRepoPath()
-    return csvHandler(repo + 'events/'+ key[:4] + '/' + key + '/' + key + '_' + dataType + '.csv', names)
+    return csvHandler(repo + 'events/'+ key[:4] + '/' + key + '/' + key + '_' + dataType + '.csv', names, index)
     
 def readTeamListCsv(year):
     repo = getRepoPath()
     return csvHandler(repo + 'teams/'+ str(year) + '/teams.csv', names=['Teams'])   
 
 def teamEventMatches(team, event):
+    team = teamString(team)
     res = None
     try:
         eM = readEventCsv(event, 'matches', names=['key', 'r1', 'r2', 'r3', 'b1', 'b2', 'b3', 'rScore', 'bScore'])
@@ -44,12 +45,16 @@ def teamEventMatches(team, event):
         print(e)
     return res
 
-def csvHandler(path, names):
+def matchAdapter():
+    print("memes!")
+    #this should convert TBA matches to my file format.
+
+def csvHandler(path, names, index=None):
     filePath = Path(path)    
     res = None    
     if filePath.exists():
         if filePath.stat().st_size > 0:
-            res = pd.read_csv(path, names=names, skipinitialspace=True)
+            res = pd.read_csv(path, names=names, skipinitialspace=True, index_col=index)
     return res
 
 def teamString(team):
@@ -62,8 +67,9 @@ def teamNumber(team):
         team = str(team)[3:]
     return int(team)
 
-def matchResult(team, match, useTba):
-    if useTba:
+def matchResult(team, match, useTba=False):
+    team = teamString(team)
+    if useTba == True:
         onRed = team in match['alliances']['red']['team_keys']
         onBlue = not onRed 
         redWins = match['winning_alliance'] == 'red'
