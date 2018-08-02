@@ -40,14 +40,31 @@ def teamEventMatches(team, event):
     try:
         eM = readEventCsv(event, 'matches', names=['key', 'r1', 'r2', 'r3', 'b1', 'b2', 'b3', 'rScore', 'bScore'])
         res = eM[(eM.r1 == team) | (eM.r2 == team) | (eM.r3 == team) | (eM.b1 == team) | (eM.b2 == team) | (eM.b3 == team)]
-    except Exception as e:
-        print("Error fetching matches for event", event)
-        print(e)
+    except:
+        try:
+            res = matchAdapter(team, event)
+        except Exception as e:
+            print("Error fetching team event matches for ", event)
     return res
 
-def matchAdapter():
-    print("memes!")
-    #this should convert TBA matches to my file format.
+def matchAdapter(team, event):
+    tba = setup()
+    tbaMatches = tba.team_matches(team, event)
+    
+    matchesList = []
+    for match in tbaMatches:
+        matchesList.append({'key': match['key'],
+                        'r1': match['alliances']['red']['team_keys'][0],
+                        'r2': match['alliances']['red']['team_keys'][1],
+                        'r3': match['alliances']['red']['team_keys'][2],
+                        'b1': match['alliances']['blue']['team_keys'][0],
+                        'b2': match['alliances']['blue']['team_keys'][1],
+                        'b3': match['alliances']['blue']['team_keys'][2],
+                        'rScore': match['alliances']['red']['score'],
+                        'bScore': match['alliances']['blue']['score']})
+    return pd.DataFrame(matchesList)
+    
+    
 
 def csvHandler(path, names, index=None):
     filePath = Path(path)    
