@@ -2,7 +2,7 @@ import gen
 
 tba = gen.setup()
 
-teamCount = 14
+teamCount = 20
 draftSize = teamCount * 3
 
 singleTier = 0

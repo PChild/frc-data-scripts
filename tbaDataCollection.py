@@ -91,8 +91,38 @@ def saveTeamList(year):
 
             gen.listToCSV(fullPath, teams)
         except Exception as e:
-            print(e)    
+            print(e)
+
+def saveEventTeamList(event):
+    fileExists, fullPath = filePathHandler('events', event, 'teams')
     
+    if not fileExists:
+        try:
+            teams = []
+            matches = tba.event_matches(event)
+            if len(matches) > 0:
+                for match in matches:
+                    for team in match['alliances']['red']['team_keys']:
+                        if team not in teams:
+                            teams.append({'Teams': team})
+                    for team in match['alliances']['blue']['team_keys']:
+                        if team not in teams:
+                            teams.append({'Teams': team})
+            else:
+                for team in tba.event_teams(event, False, True):
+                    teams.append({'Teams': team})
+            gen.listOfDictToCSV(fullPath, teams)
+        except Exception as e:
+            print(e)
+
+def removeEventTeamList(event):
+    fileExists, fullPath = filePathHandler('events', event, 'teams')
+    
+    outFile = Path(fullPath + '.csv')    
+    
+    if fileExists:
+        outFile.unlink()
+ 
 def saveTeamEvents(year, team):
     fileExists, fullPath = filePathHandler('teams', team, 'events', year)
     
@@ -155,14 +185,15 @@ def main():
     for year in range(1992, 2019):
         print("On year", year)
         eventList = tba.events(year, False, True)
-        pool.map(saveEventRankings, eventList)
-        pool.map(saveEventOPRs, eventList)
-        pool.map(saveEventInfo, eventList)
-
-        teamList = gen.readTeamListCsv(year)
-        pool.map(partial(saveTeamEvents, year), teamList['Teams'])
-        pool.map(partial(saveTeamAwards, year), teamList['Teams'])
-        pool.map(partial(saveTeamYearMatches, year), teamList['Teams'])
+        pool.map(saveEventTeamList, eventList)
+#        pool.map(saveEventRankings, eventList)
+#        pool.map(saveEventOPRs, eventList)
+#        pool.map(saveEventInfo, eventList)
+#
+#        teamList = gen.readTeamListCsv(year)
+#        pool.map(partial(saveTeamEvents, year), teamList['Teams'])
+#        pool.map(partial(saveTeamAwards, year), teamList['Teams'])
+#        pool.map(partial(saveTeamYearMatches, year), teamList['Teams'])
     pool.close()
     pool.join()
     

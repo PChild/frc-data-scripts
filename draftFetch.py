@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+from multiprocessing import Pool
 import slff
 import gen
 
@@ -28,3 +29,14 @@ def fetchDraft(post, code):
              'Position': idx+1, 
              'Tier Size': tierSize} for idx, line in enumerate(lines)]
     
+def main():
+    pool = Pool()
+    tba = gen.setup()    
+    
+    for year in range(1992, 2018):
+        print("On year", str(year))
+        events = tba.events(year)
+        pool.map(slff.scoreEvent, events)
+    
+if __name__ == '__main__':
+    main()

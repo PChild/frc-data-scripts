@@ -295,23 +295,26 @@ def buildDraftList(key, isDistrict, eventTeams=None, year=None):
     return listData
 
 def teamListHelper(event):
-    teams = []
-    matches = tba.event_matches(event)
-    for match in matches:
-        for team in match['alliances']['red']['team_keys']:
-            if team not in teams:
-                teams.append(team)
-        for team in match['alliances']['blue']['team_keys']:
-            if team not in teams:
-                teams.append(team)
+    teams = gen.readEventCsv(event, 'teams')
+    
+    if teams is None:    
+        matches = tba.event_matches(event)
+        for match in matches:
+            for team in match['alliances']['red']['team_keys']:
+                if team not in teams:
+                    teams.append(team)
+            for team in match['alliances']['blue']['team_keys']:
+                if team not in teams:
+                    teams.append(team)
     return teams
 
 def scoreEvent(event):
     teams = teamListHelper(event)
     teamScores = sorted([{'Team': team[3:], 'Score': getTeamEventPoints(team, event, True, len(teams))[0]} for team in teams], key = lambda k: k['Score'], reverse=True)
     gen.listOfDictToCSV(event +"_scores", teamScores, ['Team', 'Score'])
-
-def main():
+    
+    
+def eventPrep():
     YEAR = 2018
     KEY = "wvrox"
     eventCode = str(YEAR) + KEY
@@ -333,5 +336,10 @@ def main():
                 'Play Rating', 'Overall Rating', 'Total Points', 'Event Max',
                 'Event Avg', 'Year Avg', 'Events']        
     gen.listOfDictToCSV(fileName, teamData, colOrder)
+
+def main():
+    #eventPrep()
+    print('Ready')
+
 if __name__ == '__main__':
     main()
