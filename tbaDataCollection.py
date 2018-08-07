@@ -93,6 +93,12 @@ def saveTeamList(year):
         except Exception as e:
             print(e)
 
+def find(listObj, key, value):
+    for idx, dictObj in enumerate(listObj):
+        if dictObj[key] == value:
+            return idx
+    return None
+
 def saveEventTeamList(event):
     fileExists, fullPath = filePathHandler('events', event, 'teams')
     
@@ -103,10 +109,10 @@ def saveEventTeamList(event):
             if len(matches) > 0:
                 for match in matches:
                     for team in match['alliances']['red']['team_keys']:
-                        if team not in teams:
+                        if find(teams, 'Teams', team) is None:
                             teams.append({'Teams': team})
                     for team in match['alliances']['blue']['team_keys']:
-                        if team not in teams:
+                        if find(teams, 'Teams', team) is None:
                             teams.append({'Teams': team})
             else:
                 for team in tba.event_teams(event, False, True):

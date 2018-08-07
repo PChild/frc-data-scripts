@@ -116,3 +116,7 @@ venv.bak/
 *.txt
 
 *.tsv
+
+MountainImages/
+
+*.7z
