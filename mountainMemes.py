@@ -1,8 +1,9 @@
 import os
+import cv2
 import picode
 import madmom
-import librosa
-import IPython.display as ipd 
+import librosa 
+from PIL import Image
 from pathlib import Path
 
 def fetchFileList(directory):
@@ -48,11 +49,64 @@ def getBeatTimes(file):
     
     return proc(act)
 
-
-def getImages(directory):
-    return [child for child in Path(directory).iterdir()]
+def prepFrame(image, width=3840, height=2160):
+    base = Image.open(image)
+    imWidth, imHeight = base.size
     
-def buildVideo(fileName, length, beats, images):
+    res = base
+    
+    #This code checks if the image is too tall for the frame, if it is then
+    #The image is split into columns to get it closer to the correct aspect ratio
+    if imHeight > height:
+        desiredRatio = width / height
+        
+        bestRatio = imWidth / imHeight
+        columns = 1
+        
+        for i in range(1,6):
+            newWidth = imWidth * i
+            newHeight = imHeight / i
+            
+            newRatio = newWidth / newHeight
+            
+            if abs(desiredRatio - newRatio) < abs(desiredRatio - bestRatio):
+                bestRatio = newRatio
+                columns = i
+        
+        newHeight = int(imHeight / columns)
+        
+        res = Image.new("RGB", (int(columns * imWidth) + 1, newHeight + 1), None)
+        
+        i = 1
+        while i <= columns:
+            imgSlice = base.copy().crop((0, (i - 1) * newHeight, imWidth, i * newHeight))
+            res.paste(imgSlice, ((i - 1) * imWidth, 0))
+            i += 1
+    
+    #Scales image to fit in the specified frame size while maintaining the
+    #chopped image aspect ratio to make sure things aren't distorted.
+    newWidth, newHeight = res.size
+    if newWidth > width or newHeight > height:
+        widthRatio = newWidth / width
+        heightRatio = newHeight / height
+        
+        scaler = heightRatio
+        if widthRatio > heightRatio:
+            scaler = widthRatio
+    
+        resizeWidth = round(newWidth / scaler)
+        resizeHeight = round(newHeight / scaler)
+        res = res.resize((resizeWidth, resizeHeight))
+        
+    final = Image.new("RGB", (width, height))
+    
+    
+    return res
+    
+def getImages(directory):
+    return [directory + child for child in os.listdir(directory)]
+    
+def buildVideo(fileName, length, beats, images, fps=30):
     print('memes')
 
 def main():   
