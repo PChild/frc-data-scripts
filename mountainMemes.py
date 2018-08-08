@@ -1,5 +1,8 @@
 import os
 import picode
+import madmom
+import librosa
+import IPython.display as ipd 
 from pathlib import Path
 
 def fetchFileList(directory):
@@ -27,11 +30,8 @@ def readCode(file):
         fileContents = file.read()
     return fileContents
 
-def main():    
-    codeDirectory = '../SnakeSkin/'
-    outputDirectory = './MountainImages/'
-    
-    prepOutput(outputDirectory)
+def createImages(codeDirectory, imageDirectory):    
+    prepOutput(imageDirectory)
     
     fileList = fetchFileList(codeDirectory)
     for file in fileList:
@@ -40,7 +40,23 @@ def main():
         except:
             fileCode = readCode(file['Path'])
             fileImage = picode.to_pic(code=fileCode, language='kotlin', margin=0, show_line_numbers=True)
-        fileImage.save(outputDirectory + str(file['Length']) + "_" + file['Name'] + '.png')
+        fileImage.save(imageDirectory + str(file['Length']) + "_" + file['Name'] + '.png')
+    
+def getBeatTimes(file):
+    proc = madmom.features.beats.DBNBeatTrackingProcessor(fps=100)
+    act = madmom.features.beats.RNNBeatProcessor()(file)
+    
+    return proc(act)
+
+def main():   
+    codeDirectory = '../SnakeSkin/'
+    imageDirectory = './MountainImages/'
+    musicFile = 'mountain.wav'
+    
+    baseAudio, sampleRate = librosa.load(musicFile) 
+    mmBeats = getBeatTimes(musicFile)
+    mmClicks = librosa.clicks(mmBeats, sr=sampleRate, length=len(baseAudio))
+    librosa.output.write_wav('madmomMountain.wav', baseAudio + mmClicks, sampleRate)
     
 if __name__ == '__main__':
     main()

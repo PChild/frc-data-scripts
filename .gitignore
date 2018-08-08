@@ -120,3 +120,5 @@ venv.bak/
 MountainImages/
 
 *.7z
+
+*.wav
