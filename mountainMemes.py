@@ -1,9 +1,11 @@
 import os
+import cv2
+import numpy
 import picode
 import madmom
 import librosa 
 from PIL import Image
-from cv2 import VideoWriter, VideoWriter_fourcc, imread
+from cv2 import VideoWriter, VideoWriter_fourcc
 
 def fetchFileList(directory):
     fileList = []
@@ -119,24 +121,31 @@ def testMusic(musicFile):
     librosa.output.write_wav('BEAT_TEST_' + musicFile, baseAudio + mmClicks, sampleRate)
     
 def buildVideo(outFile, imageFolder, musicFile, fps=30):
-    codec = VideoWriter_fourcc('MJPG')
+    codec = VideoWriter_fourcc(*'MP4V')
     frames = getFrames(imageFolder)
+    print("Got", str(len(frames)), "frames")
     beats = getBeatTimes(musicFile)
+    print("Got", str(len(beats)), "beats")
     baseAudio, sampleRate = librosa.load(musicFile)
     duration = librosa.core.get_duration(baseAudio)
+    print("Audio duration is:", str(duration), "seconds")
     
     if len(frames) > len(beats):
         print("Too many images for sound file!")
     else:
-        firstFrame = imread(frames[0])
+        print('Processing video')
+        firstFrame = cv2.cvtColor(numpy.array(frames[0]), cv2.COLOR_RGB2BGR)
         size = firstFrame.shape[1], firstFrame.shape[0]
-        vid = VideoWriter(outFile, codec, float(fps), size, is_color=True)
+        print("Video resolution is:", str(firstFrame.shape[1])+"x"+str(firstFrame.shape[0]))
+        
+        vid = VideoWriter(outFile, codec, fps, size)
         
         timePerFrame = 1 / fps
         currentTime = 0
         for idx, frame in enumerate(frames):
+            print("On frame", str(idx), "of", str(len(frames)))
             transitionTime = beats[idx]
-            image = imread(frame)
+            image = cv2.cvtColor(numpy.array(frame), cv2.COLOR_RGB2BGR)
             
             if idx + 1 == len(frames):
                 transitionTime = duration
@@ -151,7 +160,7 @@ def main():
     imageFolder = './MountainImages/'
     musicFile = 'mountain.wav'
     
-    #buildVideo('MountainMeme.mjpg', imageFolder, musicFile)
+    buildVideo('MountainMeme.mp4', imageFolder, musicFile)
     #createImages(codeFolder, imageFolder)
     
 
