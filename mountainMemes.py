@@ -161,7 +161,7 @@ def createFrames(inputFolder='./baseImages/', outputFolder='./videoFrames/'):
     prepOutput(outputFolder)
     
     for idx, file in enumerate(getImageFiles(inputFolder)):
-        prepFrame(file).save(outputFolder + str(idx)+'.png')
+        prepFrame(file).save(outputFolder + str("%03d" % idx)+'.png')
 
 def getFrames(frameFolder):
     return [Image.open(file) for file in getImageFiles(frameFolder)]
@@ -233,8 +233,8 @@ def muxVideo(audioFile, videoFile, outFile):
 def main():   
     musicFile = 'MountainBase.wav'
     
-    #updateImages()
-    #buildVideo('MountainMeme.mp4', musicFile)
+    updateImages()
+    buildVideo('MountainMeme.mp4', musicFile)
     
 if __name__ == '__main__':
     main()
