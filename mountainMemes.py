@@ -21,7 +21,7 @@ def fetchFileList(directory):
 def getImages(directory):
     return [directory + child for child in os.listdir(directory)]
 
-def wipeImages(folder):
+def wipeImages(folder='./videoImages/'):
     if os.path.isdir(folder):
         for item in os.listdir(folder):
             os.remove(folder + item)
@@ -37,7 +37,7 @@ def readCode(file):
         fileContents = file.read()
     return fileContents
 
-def createImages(codeDirectory, imageDirectory):    
+def createImages(codeDirectory, imageDirectory='./videoImages/'):    
     prepOutput(imageDirectory)
     
     fileList = fetchFileList(codeDirectory)
@@ -124,7 +124,7 @@ def testMusic(musicFile):
     mmClicks = librosa.clicks(mmBeats, sr=sampleRate, length=len(baseAudio))
     librosa.output.write_wav('BEAT_TEST_' + musicFile, baseAudio + mmClicks, sampleRate)
 
-def buildVideo(outFile, imageFolder, musicFile, fps=30):
+def buildVideo(outFile, musicFile, imageFolder='./videoImages/' fps=30):
     codec = VideoWriter_fourcc(*'MP4V')
     frames = getFrames(imageFolder)
     print("Got", str(len(frames)), "frames")
@@ -170,12 +170,11 @@ def muxVideo(audioFile, videoFile, outFile):
 
 def main():   
     codeFolder = '../SnakeSkin/'
-    imageFolder = './MountainImages/'
     musicFile = 'MountainBase.wav'
     
-    createImages(codeFolder, imageFolder)
-    buildVideo('MountainMeme.mp4', imageFolder, musicFile)
-    wipeImages(imageFolder)
+    createImages(codeFolder)
+    buildVideo('MountainMeme.mp4', musicFile)
+    wipeImages()
     
 if __name__ == '__main__':
     main()
