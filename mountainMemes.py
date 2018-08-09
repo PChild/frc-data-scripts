@@ -1,10 +1,9 @@
 import os
-import cv2
 import picode
 import madmom
 import librosa 
 from PIL import Image
-from pathlib import Path
+from cv2 import VideoWriter, VideoWriter_fourcc, imread
 
 def fetchFileList(directory):
     fileList = []
@@ -15,15 +14,16 @@ def fetchFileList(directory):
                 fileLength = sum(1 for line in open(filePath, encoding='utf8'))
                 fileList.append({'Path': filePath, 'Name': file, 'Length': fileLength})
     return fileList
+
+def getImages(directory):
+    return [directory + child for child in os.listdir(directory)]
     
-def prepOutput(folder):
-    output = Path(folder)
-    
-    if output.exists():
-        for item in output.iterdir():
-            item.unlink()
-        output.rmdir()
-    output.mkdir()
+def prepOutput(folder):    
+    if os.path.isdir(folder):
+        for item in os.listdir(folder):
+            os.remove(folder + item)
+        os.rmdir(folder)
+    os.mkdir(folder)
 
 def readCode(file):
     fileContents = ""
@@ -42,12 +42,6 @@ def createImages(codeDirectory, imageDirectory):
             fileCode = readCode(file['Path'])
             fileImage = picode.to_pic(code=fileCode, language='kotlin', margin=0, show_line_numbers=True)
         fileImage.save(imageDirectory + str("%03d" % file['Length']) + "_" + file['Name'] + '.png')
-    
-def getBeatTimes(file):
-    proc = madmom.features.beats.DBNBeatTrackingProcessor(fps=100)
-    act = madmom.features.beats.RNNBeatProcessor()(file)
-    
-    return proc(act)
 
 def prepFrame(image, width=3840, height=2160):
     base = Image.open(image)
@@ -55,8 +49,8 @@ def prepFrame(image, width=3840, height=2160):
     
     res = base
     
-    #This code checks if the image is too tall for the frame, if it is then
-    #The image is split into columns to get it closer to the correct aspect ratio
+    #Checks if the image is too tall for the frame, if it is then split the
+    #image into columns to get it closer to the correct aspect ratio
     if imHeight > height:
         desiredRatio = width / height
         
@@ -97,29 +91,70 @@ def prepFrame(image, width=3840, height=2160):
         resizeWidth = round(newWidth / scaler)
         resizeHeight = round(newHeight / scaler)
         res = res.resize((resizeWidth, resizeHeight))
-        
+    
+    #Calculates offsets to center image on screen
+    newWidth, newHeight = res.size    
+    widthOffset = int((width - newWidth) / 2)
+    heightOffset = int((height - newHeight) / 2)
+    
     final = Image.new("RGB", (width, height))
+    final.paste(res, (widthOffset, heightOffset))
     
+    return final
+
+def getFrames(folder):
+    return [prepFrame(file) for file in getImages(folder)]
+ 
+def getBeatTimes(file):
+    proc = madmom.features.beats.DBNBeatTrackingProcessor(fps=100)
+    act = madmom.features.beats.RNNBeatProcessor()(file)
     
-    return res
+    return proc(act)
+
+def testMusic(musicFile):
+    baseAudio, sampleRate = librosa.load(musicFile)
+    mmBeats = getBeatTimes(musicFile)
+    print("Madmom found", len(mmBeats), "beats.") 
+    mmClicks = librosa.clicks(mmBeats, sr=sampleRate, length=len(baseAudio))
+    librosa.output.write_wav('BEAT_TEST_' + musicFile, baseAudio + mmClicks, sampleRate)
     
-def getImages(directory):
-    return [directory + child for child in os.listdir(directory)]
+def buildVideo(outFile, imageFolder, musicFile, fps=30):
+    codec = VideoWriter_fourcc('MJPG')
+    frames = getFrames(imageFolder)
+    beats = getBeatTimes(musicFile)
+    baseAudio, sampleRate = librosa.load(musicFile)
+    duration = librosa.core.get_duration(baseAudio)
     
-def buildVideo(fileName, length, beats, images, fps=30):
-    print('memes')
+    if len(frames) > len(beats):
+        print("Too many images for sound file!")
+    else:
+        firstFrame = imread(frames[0])
+        size = firstFrame.shape[1], firstFrame.shape[0]
+        vid = VideoWriter(outFile, codec, float(fps), size, is_color=True)
+        
+        timePerFrame = 1 / fps
+        currentTime = 0
+        for idx, frame in enumerate(frames):
+            transitionTime = beats[idx]
+            image = imread(frame)
+            
+            if idx + 1 == len(frames):
+                transitionTime = duration
+            
+            while currentTime < transitionTime:
+                vid.write(image)
+                currentTime += timePerFrame
+        vid.release()
 
 def main():   
-    codeDirectory = '../SnakeSkin/'
-    imageDirectory = './MountainImages/'
+    codeFolder = '../SnakeSkin/'
+    imageFolder = './MountainImages/'
     musicFile = 'mountain.wav'
     
-    #createImages(codeDirectory, imageDirectory)
+    #buildVideo('MountainMeme.mjpg', imageFolder, musicFile)
+    #createImages(codeFolder, imageFolder)
     
-    #mmBeats = getBeatTimes(musicFile)
-    #print("Madmom found", len(mmBeats), "beats.") #289 beats
-    #mmClicks = librosa.clicks(mmBeats, sr=sampleRate, length=len(baseAudio))
-    #librosa.output.write_wav('madmomMountain.wav', baseAudio + mmClicks, sampleRate)
+
     
 if __name__ == '__main__':
     main()
