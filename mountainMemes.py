@@ -5,10 +5,50 @@ import picode
 import madmom
 import librosa
 import subprocess
+import pandas as pd
+from git import Repo
 from PIL import Image
 from cv2 import VideoWriter, VideoWriter_fourcc
 
-def fetchFileList(directory):
+def updateRepoData(repoData, file=None):
+    if file is None:
+        file = 'mountainSettings.csv'
+    pd.DataFrame([repoData], columns=['Repo']).to_csv(file, index=False)
+    
+def getRepoPath(file=None):
+    if file is None:
+        file = 'mountainSettings.csv'
+        
+    defaultRepoLocation = '../SnakeSkin/'
+    if not os.path.isfile(file):
+        updateRepoData(defaultRepoLocation, file)
+
+    return pd.read_csv(file)['Repo'].values[0]     
+
+def gitIsBehind(repoPath):
+    repo = Repo(repoPath) 
+    return (sum(1 for c in repo.iter_commits('master..origin/master')) > 0)
+
+def updateGit(repoPath):
+    if gitIsBehind(repoPath):
+        repo = Repo(repoPath)
+        repo.git.pull()
+        print('Repo was behind, updated.')
+    else:
+        print('Repo is up to date.')
+
+def handleRepo(url='https://github.com/team401/SnakeSkin.git'):
+    repoPath = getRepoPath()
+    if not os.path.isdir(repoPath):
+        os.mkdir(repoPath)
+    
+    dotGitExists = os.path.isdir(repoPath + '.git/')    
+    if dotGitExists:        
+        updateGit(repoPath)    
+    if not dotGitExists:
+        Repo.clone_from(url, repoPath)
+
+def fetchCodeFileData(directory):
     fileList = []
     for root, dirs, files in os.walk(directory):
         for file in files:
@@ -18,10 +58,19 @@ def fetchFileList(directory):
                 fileList.append({'Path': filePath, 'Name': file, 'Length': fileLength})
     return fileList
 
-def getImages(directory):
+def updateImages(force=False):
+    repoPath = getRepoPath()
+    if gitIsBehind(repoPath) or force:
+        updateGit(repoPath)
+        print('Updating base images')
+        createImages()
+        print('Updating frames')
+        createFrames()
+        
+def getImageFiles(directory):
     return [directory + child for child in os.listdir(directory)]
 
-def wipeImages(folder='./videoImages/'):
+def wipeImages(folder='./baseImages/'):
     if os.path.isdir(folder):
         for item in os.listdir(folder):
             os.remove(folder + item)
@@ -37,10 +86,10 @@ def readCode(file):
         fileContents = file.read()
     return fileContents
 
-def createImages(codeDirectory, imageDirectory='./videoImages/'):    
+def createImages(codeDirectory='../SnakeSkin/', imageDirectory='./baseImages/'):    
     prepOutput(imageDirectory)
     
-    fileList = fetchFileList(codeDirectory)
+    fileList = fetchCodeFileData(codeDirectory)
     for file in fileList:
         try:
             fileImage = picode.to_pic(file_path=file['Path'], language='kotlin', margin=0, line_numbers_padding=20, font_size=24, show_line_numbers=True)
@@ -108,9 +157,15 @@ def prepFrame(image, width=3840, height=2160):
     
     return final
 
-def getFrames(folder):
-    return [prepFrame(file) for file in getImages(folder)]
- 
+def createFrames(inputFolder='./baseImages/', outputFolder='./videoFrames/'):
+    prepOutput(outputFolder)
+    
+    for idx, file in enumerate(getImageFiles(inputFolder)):
+        prepFrame(file).save(outputFolder + str(idx)+'.png')
+
+def getFrames(frameFolder):
+    return [Image.open(file) for file in getImageFiles(frameFolder)]
+
 def getBeatTimes(file):
     proc = madmom.features.beats.DBNBeatTrackingProcessor(fps=100)
     act = madmom.features.beats.RNNBeatProcessor()(file)
@@ -124,9 +179,9 @@ def testMusic(musicFile):
     mmClicks = librosa.clicks(mmBeats, sr=sampleRate, length=len(baseAudio))
     librosa.output.write_wav('BEAT_TEST_' + musicFile, baseAudio + mmClicks, sampleRate)
 
-def buildVideo(outFile, musicFile, imageFolder='./videoImages/', fps=30):    
+def buildVideo(outFile, musicFile, framesFolder='./videoFrames/', fps=30):    
     codec = VideoWriter_fourcc(*'MP4V')
-    frames = getFrames(imageFolder)
+    frames = getFrames(framesFolder)
     print("Got", str(len(frames)), "frames")
     beats = getBeatTimes(musicFile)
     print("Got", str(len(beats)), "beats")
@@ -176,12 +231,10 @@ def muxVideo(audioFile, videoFile, outFile):
     print('Muxing Done')
 
 def main():   
-    codeFolder = '../SnakeSkin/'
     musicFile = 'MountainBase.wav'
     
-    createImages(codeFolder)
-    buildVideo('MountainMeme.mp4', musicFile)
-    wipeImages()
+    #updateImages()
+    #buildVideo('MountainMeme.mp4', musicFile)
     
 if __name__ == '__main__':
     main()
