@@ -3,7 +3,8 @@ import cv2
 import numpy
 import picode
 import madmom
-import librosa 
+import librosa
+import subprocess
 from PIL import Image
 from cv2 import VideoWriter, VideoWriter_fourcc
 
@@ -19,12 +20,15 @@ def fetchFileList(directory):
 
 def getImages(directory):
     return [directory + child for child in os.listdir(directory)]
-    
-def prepOutput(folder):    
+
+def wipeImages(folder):
     if os.path.isdir(folder):
         for item in os.listdir(folder):
             os.remove(folder + item)
         os.rmdir(folder)
+    
+def prepOutput(folder):
+    wipeImages(folder)    
     os.mkdir(folder)
 
 def readCode(file):
@@ -119,7 +123,7 @@ def testMusic(musicFile):
     print("Madmom found", len(mmBeats), "beats.") 
     mmClicks = librosa.clicks(mmBeats, sr=sampleRate, length=len(baseAudio))
     librosa.output.write_wav('BEAT_TEST_' + musicFile, baseAudio + mmClicks, sampleRate)
-    
+
 def buildVideo(outFile, imageFolder, musicFile, fps=30):
     codec = VideoWriter_fourcc(*'MP4V')
     frames = getFrames(imageFolder)
@@ -128,22 +132,23 @@ def buildVideo(outFile, imageFolder, musicFile, fps=30):
     print("Got", str(len(beats)), "beats")
     baseAudio, sampleRate = librosa.load(musicFile)
     duration = librosa.core.get_duration(baseAudio)
-    print("Audio duration is:", str(duration), "seconds")
+    print("Audio duration is:", str(round(duration)), "seconds")
     
     if len(frames) > len(beats):
         print("Too many images for sound file!")
     else:
-        print('Processing video')
+        print('Generating video')
         firstFrame = cv2.cvtColor(numpy.array(frames[0]), cv2.COLOR_RGB2BGR)
         size = firstFrame.shape[1], firstFrame.shape[0]
         print("Video resolution is:", str(firstFrame.shape[1])+"x"+str(firstFrame.shape[0]))
         
-        vid = VideoWriter(outFile, codec, fps, size)
+        vidFile = 'VIDEO_' + outFile
+        vid = VideoWriter(vidFile, codec, fps, size)
         
         timePerFrame = 1 / fps
         currentTime = 0
         for idx, frame in enumerate(frames):
-            print("On frame", str(idx), "of", str(len(frames)))
+            print("On image", str(idx), "of", str(len(frames)))
             transitionTime = beats[idx]
             image = cv2.cvtColor(numpy.array(frame), cv2.COLOR_RGB2BGR)
             
@@ -154,16 +159,23 @@ def buildVideo(outFile, imageFolder, musicFile, fps=30):
                 vid.write(image)
                 currentTime += timePerFrame
         vid.release()
+        print('Temp video generated, muxing now.')
+        muxVideo(musicFile, vidFile, outFile)
+        os.remove(vidFile)
+
+def muxVideo(audioFile, videoFile, outFile):
+    cmd = 'ffmpeg -i ' + audioFile + ' -i ' + videoFile + ' -c:v copy -c:a aac -strict experimental ' + outFile
+    subprocess.call(cmd, shell=True)
+    print('Muxing Done')
 
 def main():   
     codeFolder = '../SnakeSkin/'
     imageFolder = './MountainImages/'
-    musicFile = 'mountain.wav'
+    musicFile = 'MountainBase.wav'
     
+    createImages(codeFolder, imageFolder)
     buildVideo('MountainMeme.mp4', imageFolder, musicFile)
-    #createImages(codeFolder, imageFolder)
-    
-
+    wipeImages(imageFolder)
     
 if __name__ == '__main__':
     main()
