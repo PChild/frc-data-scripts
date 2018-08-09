@@ -43,10 +43,10 @@ def createImages(codeDirectory, imageDirectory='./videoImages/'):
     fileList = fetchFileList(codeDirectory)
     for file in fileList:
         try:
-            fileImage = picode.to_pic(file_path=file['Path'], language='kotlin', margin=0, show_line_numbers=True)
+            fileImage = picode.to_pic(file_path=file['Path'], language='kotlin', margin=0, line_numbers_padding=20, font_size=24, show_line_numbers=True)
         except:
             fileCode = readCode(file['Path'])
-            fileImage = picode.to_pic(code=fileCode, language='kotlin', margin=0, show_line_numbers=True)
+            fileImage = picode.to_pic(code=fileCode, language='kotlin', margin=0, line_numbers_padding=20, font_size=24, show_line_numbers=True)
         fileImage.save(imageDirectory + str("%03d" % file['Length']) + "_" + file['Name'] + '.png')
 
 def prepFrame(image, width=3840, height=2160):
@@ -124,7 +124,7 @@ def testMusic(musicFile):
     mmClicks = librosa.clicks(mmBeats, sr=sampleRate, length=len(baseAudio))
     librosa.output.write_wav('BEAT_TEST_' + musicFile, baseAudio + mmClicks, sampleRate)
 
-def buildVideo(outFile, musicFile, imageFolder='./videoImages/' fps=30):
+def buildVideo(outFile, musicFile, imageFolder='./videoImages/', fps=30):    
     codec = VideoWriter_fourcc(*'MP4V')
     frames = getFrames(imageFolder)
     print("Got", str(len(frames)), "frames")
@@ -133,6 +133,9 @@ def buildVideo(outFile, musicFile, imageFolder='./videoImages/' fps=30):
     baseAudio, sampleRate = librosa.load(musicFile)
     duration = librosa.core.get_duration(baseAudio)
     print("Audio duration is:", str(round(duration)), "seconds")
+    
+    if os.path.isfile(outFile):
+        os.remove(outFile)
     
     if len(frames) > len(beats):
         print("Too many images for sound file!")
@@ -147,9 +150,13 @@ def buildVideo(outFile, musicFile, imageFolder='./videoImages/' fps=30):
         
         timePerFrame = 1 / fps
         currentTime = 0
+        
+        #beatsDiffSplit = int((len(beats) - len(frames)) / 2)
+        beatsDiffSplit = 0
+        
         for idx, frame in enumerate(frames):
             print("On image", str(idx), "of", str(len(frames)))
-            transitionTime = beats[idx]
+            transitionTime = beats[idx + beatsDiffSplit]
             image = cv2.cvtColor(numpy.array(frame), cv2.COLOR_RGB2BGR)
             
             if idx + 1 == len(frames):
