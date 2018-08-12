@@ -169,15 +169,15 @@ def createFrames(inputFolder='./baseImages/', outputFolder='./videoFrames/'):
 def getFrames(frameFolder):
     return [Image.open(file) for file in getImageFiles(frameFolder)]
 
-def getBeatTimes(file):
-    proc = madmom.features.beats.DBNBeatTrackingProcessor(fps=100)
+def getBeatTimes(file, fps=100):
+    proc = madmom.features.beats.DBNBeatTrackingProcessor(fps=fps)
     act = madmom.features.beats.RNNBeatProcessor()(file)
     
     return proc(act)
 
-def testMusic(musicFile):
+def testMusic(musicFile, fps):
     baseAudio, sampleRate = librosa.load(musicFile)
-    mmBeats = getBeatTimes(musicFile)
+    mmBeats = getBeatTimes(musicFile, fps)
     print("Madmom found", len(mmBeats), "beats.") 
     mmClicks = librosa.clicks(mmBeats, sr=sampleRate, length=len(baseAudio))
     librosa.output.write_wav('BEAT_TEST_' + musicFile, baseAudio + mmClicks, sampleRate)
@@ -235,8 +235,8 @@ def muxVideo(audioFile, videoFile, outFile):
 def main():   
     musicFile = 'MountainBase.wav'
     
-    updateImages()
-    buildVideo('MountainMeme.mp4', musicFile)
+    #updateImages()
+    #buildVideo('MountainMeme.mp4', musicFile)
 
 if __name__ == '__main__':
     main()
