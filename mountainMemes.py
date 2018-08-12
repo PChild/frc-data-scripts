@@ -8,6 +8,7 @@ import subprocess
 import pandas as pd
 from git import Repo
 from PIL import Image
+from tqdm import tqdm
 from cv2 import VideoWriter, VideoWriter_fourcc
 
 def updateRepoData(repoData, file=None):
@@ -33,7 +34,7 @@ def updateGit(repoPath):
     if gitIsBehind(repoPath):
         repo = Repo(repoPath)
         repo.git.pull()
-        print('Repo was behind, updated.')
+        print('Updated git repo.')
     else:
         print('Repo is up to date.')
 
@@ -60,12 +61,14 @@ def fetchCodeFileData(directory):
 
 def updateImages(force=False):
     repoPath = getRepoPath()
-    if gitIsBehind(repoPath) or force:
-        updateGit(repoPath)
-        print('Updating base images')
+    wasBehind = gitIsBehind(repoPath)
+    updateGit(repoPath)
+    
+    if wasBehind or force:
         createImages()
-        print('Updating frames')
+        print('Updated base images.')
         createFrames()
+        print('Frames updated.')
         
 def getImageFiles(directory):
     return [directory + child for child in os.listdir(directory)]
@@ -182,12 +185,12 @@ def testMusic(musicFile):
 def buildVideo(outFile, musicFile, framesFolder='./videoFrames/', fps=30):    
     codec = VideoWriter_fourcc(*'MP4V')
     frames = getFrames(framesFolder)
-    print("Got", str(len(frames)), "frames")
+    print("Image frames:", str(len(frames)))
     beats = getBeatTimes(musicFile)
-    print("Got", str(len(beats)), "beats")
+    print("Audio beats:", str(len(beats)))
     baseAudio, sampleRate = librosa.load(musicFile)
     duration = librosa.core.get_duration(baseAudio)
-    print("Audio duration is:", str(round(duration)), "seconds")
+    print("Audio duration:", str(round(duration)), "seconds")
     
     if os.path.isfile(outFile):
         os.remove(outFile)
@@ -195,10 +198,9 @@ def buildVideo(outFile, musicFile, framesFolder='./videoFrames/', fps=30):
     if len(frames) > len(beats):
         print("Too many images for sound file!")
     else:
-        print('Generating video')
         firstFrame = cv2.cvtColor(numpy.array(frames[0]), cv2.COLOR_RGB2BGR)
         size = firstFrame.shape[1], firstFrame.shape[0]
-        print("Video resolution is:", str(firstFrame.shape[1])+"x"+str(firstFrame.shape[0]))
+        print("Video resolution:", str(firstFrame.shape[1])+"x"+str(firstFrame.shape[0]))
         
         vidFile = 'VIDEO_' + outFile
         vid = VideoWriter(vidFile, codec, fps, size)
@@ -209,8 +211,8 @@ def buildVideo(outFile, musicFile, framesFolder='./videoFrames/', fps=30):
         #beatsDiffSplit = int((len(beats) - len(frames)) / 2)
         beatsDiffSplit = 0
         
-        for idx, frame in enumerate(frames):
-            print("On image", str(idx), "of", str(len(frames)))
+        print('Processing video frames:')
+        for idx, frame in enumerate(tqdm(frames)):
             transitionTime = beats[idx + beatsDiffSplit]
             image = cv2.cvtColor(numpy.array(frame), cv2.COLOR_RGB2BGR)
             
@@ -221,20 +223,20 @@ def buildVideo(outFile, musicFile, framesFolder='./videoFrames/', fps=30):
                 vid.write(image)
                 currentTime += timePerFrame
         vid.release()
-        print('Temp video generated, muxing now.')
+        print('Muxing video.')
         muxVideo(musicFile, vidFile, outFile)
+        print('Saved video:', outFile)
         os.remove(vidFile)
 
 def muxVideo(audioFile, videoFile, outFile):
     cmd = 'ffmpeg -i ' + audioFile + ' -i ' + videoFile + ' -c:v copy -c:a aac -strict experimental ' + outFile
     subprocess.call(cmd, shell=True)
-    print('Muxing Done')
 
 def main():   
     musicFile = 'MountainBase.wav'
     
     updateImages()
     buildVideo('MountainMeme.mp4', musicFile)
-    
+
 if __name__ == '__main__':
     main()

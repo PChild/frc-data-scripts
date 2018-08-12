@@ -106,24 +106,6 @@ def matchResult(team, match, useTba=False):
     else:
         return 'LOSS'
 
-def progressBar(value, endValue, bar_length=20):
-        '''
-        Simple progress bar
-
-        :param value: The current progress level.
-        :param endvalue: The max for the progress bar.        
-        '''
-
-        percent = float(value) / endValue
-        arrow = '-' * int(round(percent * bar_length)-1) + '>'
-        spaces = ' ' * (bar_length - len(arrow))
-
-        sys.stdout.write("\rPercent: [{0}] {1}%".format(arrow + spaces, int(round(percent * 100))))
-        sys.stdout.flush()
-
-def progressCounter(value, endValue, item):
-    sys.stdout.write("On {0} {1} of {2}".format(item, value, endValue))
-
 def listToCSV(filename, listObj):
     f = open(filename + ".csv", 'w', encoding='utf-8')
     
