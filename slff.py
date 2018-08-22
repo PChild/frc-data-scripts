@@ -122,6 +122,9 @@ def getAwardPoints(team, event, eventType, useTba=False):
                     awardType = 'OTHER'
                 if awardType in NO_POINTS:
                     awardType = 'NONE'
+                    
+                if awardType is CA and eventType == 'CMP':
+                    awardPoints -= 90
                 awardPoints += awardData[eventType][awardType]
     return awardPoints
 
@@ -316,12 +319,12 @@ def scoreEvent(event):
     
 def eventPrep():
     YEAR = 2018
-    KEY = "wvrox"
+    KEY = "marc"
     eventCode = str(YEAR) + KEY
     
-    eventTeams = [48, 179, 456, 686, 888, 1038, 1629, 1732, 2614, 2655, 2656,
-                  3260, 3492, 3504, 3538, 4265, 4462, 4467, 4505, 4575, 5549,
-                  5740, 5811, 9999]
+    eventTeams = [548, 4395, 1528, 240, 1504, 33, 51, 3641, 245, 1718, 70, 503,
+                  4130, 68, 3538, 2834, 3414, 818, 910, 226, 27, 5530, 4384, 1,
+                  5577, 4130, 7166 ]
     #eventTeams = gen.readTeamListCsv(YEAR)['Teams'].tolist()
     
     fileName = eventCode
@@ -338,8 +341,7 @@ def eventPrep():
     gen.listOfDictToCSV(fileName, teamData, colOrder)
 
 def main():
-    #eventPrep()
-    print('Ready')
+    eventPrep()
 
 if __name__ == '__main__':
     main()
