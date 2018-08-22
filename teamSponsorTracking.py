@@ -98,19 +98,23 @@ def formatData(data):
     formattedData = []
     
     for team in data:
-        if int(team) > 0 and int(team) < 10000:
+        if int(team) > 0 and int(team) < 9000:
             teamData = data[team]
             dataObj = {'Team': team}
             
+            totalSponsors = 0
             for year in teamData:
                 yearData = teamData[year]
+                
+                totalSponsors += yearData['Count']
                 
                 for field in yearData:
                     if type(yearData[field]) is list:
                         dataObj[year + ' ' + field] = ' / '.join(yearData[field])
                     else:
                         dataObj[year + ' ' + field] = yearData[field]
-            formattedData.append(dataObj)
+            if totalSponsors > 0:
+                formattedData.append(dataObj)
     return formattedData
 
 def main():
