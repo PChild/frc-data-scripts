@@ -5,9 +5,11 @@ from pathlib import Path
 import csv
 import re
 from time import sleep
+from tqdm import tqdm
 
 zipPattern = re.compile("\d+\-\d+")
-fileName = "ftcData.csv"
+fileName = "FTC_DelMarVa.csv"
+roi = ['VA', 'MD', 'DE']
 ftcData = []
 
 def handleZip(obj):
@@ -22,7 +24,7 @@ def handleZip(obj):
             zipCode = zipCode[:3]
     except:
         pass
-    return zipCode
+    return str(zipCode)
 
 def fetchFtcData():
     baseUrl = "http://theorangealliance.org/apiv2/"
@@ -49,29 +51,37 @@ else:
     badTeams = 0
     badEvents = 0
     [teams, events] = fetchFtcData()
-    for (idx, team) in enumerate(teams):
-        gen.progressBar(idx, len(teams))
-        zipCode = handleZip(team)
-        if zipCode == "":
-            badTeams += 1
-        ftcData.append({"type": "Team", "location": zipCode, "country": team['country'], "key": "ftc" + str(team['team_number'])})
-    for (idx, event) in enumerate(events):
-        gen.progressBar(idx, len(events))
-        zipCode = handleZip(team)
-        if zipCode == "":
-            badEvents += 1
-        ftcData.append({"type": "Event", "location": zipCode, "country": event['country'], "key": event['event_key']})
+    for team in tqdm(teams):
+        if team['state_prov'] in roi:
+            zipCode = handleZip(team)
+            if zipCode == "":
+                badTeams += 1
+            ftcData.append({"type": "Team", 
+                            "zip": zipCode, 
+                            "country": team['country'], 
+                            "key": "ftc" + str(team['team_number']), 
+                            'city': team['city'], 
+                            'state': team['state_prov'], 
+                            'country': team['country']})
+    for event in tqdm(events):
+        if event['state_prov'] in roi:
+            zipCode = handleZip(team)
+            if zipCode == "":
+                badEvents += 1
+            ftcData.append({"type": "Event",
+                            "zip": zipCode,
+                            "country": event['country'],
+                            "key": event['event_key'],
+                            'city': event['city'], 
+                            'state': event['state_prov'], 
+                            'country': event['country']})
     print("\n", badTeams, "out of", len(teams), "teams were bad.")
     print(badEvents, "out of", len(events), "events were bad.")
-
-
-
 
 modifiedCount = 0
 [teams, events] = fetchFtcData()
 
-for (idx, obj) in enumerate(ftcData):
-    gen.progressBar(idx, len(ftcData))
+for obj in tqdm(ftcData):
     item = ""
     
     if obj['type'] == "Team":
@@ -79,20 +89,20 @@ for (idx, obj) in enumerate(ftcData):
     else:
         item = events[find(events, 'event_key', obj['key'])]
     
-    if obj['location'] == 'None' or obj['location'] == None or obj['location'] == '':
+    if obj['zip'] == 'None' or obj['zip'] == None or obj['zip'] == '':
         obj['location'] = handleZip(item)
         modifiedCount += 1
     
-    if bool(zipPattern.match(obj['location'])):
-        obj['location'] = obj['location'][:5]
+    if bool(zipPattern.match(obj['zip'])):
+        obj['zip'] = obj['zip'][:5]
         modifiedCount += 1
-    if(len(obj['location']) == 4 and obj['country'] == 'USA'):
-        obj['location'] = str(0) + obj['location']
+    if(len(obj['zip']) == 4 and obj['zip'] == 'USA'):
+        obj['zip'] = str(0) + obj['zip']
         modifiedCount += 1
-    if (obj['location'][:3] == "AK " ):
-        obj['location'] = obj['location'][3:][:5]
+    if (obj['zip'][:3] == "AK " ):
+        obj['zip'] = obj['zip'][3:][:5]
         modifiedCount += 1
         
     
 print("Updated", modifiedCount, "objects out of", len(ftcData))
-gen.listOfDictToCSV("ftcData", ftcData)
+gen.listOfDictToCSV(fileName, ftcData)

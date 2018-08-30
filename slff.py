@@ -319,12 +319,12 @@ def scoreEvent(event):
     
 def eventPrep():
     YEAR = 2018
-    KEY = "marc"
+    KEY = "rsr"
     eventCode = str(YEAR) + KEY
     
-    eventTeams = [548, 4395, 1528, 240, 1504, 33, 51, 3641, 245, 1718, 70, 503,
-                  4130, 68, 3538, 2834, 3414, 818, 910, 226, 27, 5530, 4384, 1,
-                  5577, 4130, 7166 ]
+    eventTeams = [364, 1912, 1927, 2080, 2183, 2221, 2992, 3039, 3337, 3616,
+                  3653, 3847, 3946, 4087, 4107, 4336, 4587, 4978, 5785, 5829,
+                  5863, 5930, 5965, 5997, 6489, 7094, 7325, 7331, 2992]
     #eventTeams = gen.readTeamListCsv(YEAR)['Teams'].tolist()
     
     fileName = eventCode

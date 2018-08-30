@@ -1,4 +1,3 @@
-import sys
 import tbapy
 import json
 import pandas as pd
@@ -20,6 +19,9 @@ def setup(apiKey="TBA_KEY", useEnv=True):
         apiKey = os.getenv(apiKey)
     
     return tbapy.TBA(apiKey)
+
+def getFirstAPI(apiKey='firstAPI'):
+    return os.getenv(apiKey)
 
 def readTeamCsv(key, dataType, year, names=None):
     key = teamString(key)

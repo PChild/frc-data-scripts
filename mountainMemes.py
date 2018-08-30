@@ -235,8 +235,8 @@ def muxVideo(audioFile, videoFile, outFile):
 def main():   
     musicFile = 'MountainBase.wav'
     
-    #updateImages()
-    #buildVideo('MountainMeme.mp4', musicFile)
+    updateImages()
+    buildVideo('MountainMeme.mp4', musicFile)
 
 if __name__ == '__main__':
     main()
