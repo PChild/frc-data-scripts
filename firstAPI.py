@@ -15,3 +15,4 @@ headers = {'Authorization': 'Basic ' + authToken,
 def getEventTeams(event):    
     rawTeams = requests.get(serverBase + 'teams?eventCode=' + event, headers=headers).json()['teams']
     return [team['teamNumber'] for team in rawTeams]
+
