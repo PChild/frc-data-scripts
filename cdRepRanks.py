@@ -1,18 +1,18 @@
 import requests
 from bs4 import BeautifulSoup
 import gen
+from tqdm import tqdm
 import datetime
 
 now = datetime.datetime.now()
 timeStamp = now.strftime("%Y-%m-%d")
 
 baseURL = 'https://www.chiefdelphi.com/forums/memberlist.php?&order=DESC&sort=reputation&pp=100&page='
-pagesToFetch = 421
+pagesToFetch = 422
 
 
 userRanks = []
-for val in range(1, pagesToFetch + 1):
-    gen.progressBar(val, pagesToFetch + 1)
+for val in tqdm(range(1, pagesToFetch + 1)):
     r = requests.get(baseURL + str(val))
     soup = BeautifulSoup(r.content,"html.parser")
     userTable = soup.find_all("table", {"class":"tborder", "cellpadding": "6", 
