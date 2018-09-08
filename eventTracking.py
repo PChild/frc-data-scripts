@@ -32,7 +32,7 @@ def saveUpdateDate(updateDate):
     
 def getUpdateDate(year=2018):
     path = baseFolder + '/' + str(year) + '/UpdateDate.csv'
-    raw = pd.read_csv(path)
+    return pd.read_csv(path)
 
 def getSoup(endPoint='events'):
     baseURL = 'https://frc-events.firstinspires.org/'+ str(year) + '/' 
@@ -53,6 +53,7 @@ def updateEventsData():
     prevDate = getUpdateDate()
     
     if prevDate != currentDate:
+        saveUpdateDate(currentDate)
         eventsData = getEventsData(eventSoup)
     else:
         print('Events Data was up to date already')
@@ -106,7 +107,7 @@ def saveEventsDataUpdate(new, old=[{}]):
     newDict = transformEventsListToDict(new)
     
     added = []
-    shared = [] #list of shared event codes
+    shared = []
     for event in newDict:
         if event not in oldDict:
             added.append(newDict[event])
