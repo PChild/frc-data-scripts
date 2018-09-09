@@ -30,7 +30,7 @@ def getFolderFiles(folder):
 def saveUpdateDate(updateDate):
     gen.listToCSV('UpdateDate', [updateDate])
     
-def getUpdateDate(year=2018):
+def getEventsUpdateDate(year=2018):
     path = baseFolder + '/' + str(year) + '/UpdateDate.csv'
     return pd.read_csv(path)
 
@@ -50,7 +50,7 @@ def updateEventsData():
     eventSoup = getSoup()
     
     currentDate = getCurrentDate(eventSoup)
-    prevDate = getUpdateDate()
+    prevDate = getEventsUpdateDate()
     
     if prevDate != currentDate:
         saveUpdateDate(currentDate)
@@ -102,7 +102,7 @@ def getEventsData(soup=None):
     
     return eventData
 
-def saveEventsDataUpdate(new, old=[{}]):    
+def getEventsDataUpdate(new, old=[{}]):    
     oldDict = transformEventsListToDict(old)
     newDict = transformEventsListToDict(new)
     
@@ -158,11 +158,12 @@ def saveEventsDataUpdate(new, old=[{}]):
         
         for prop in ['Capacity', 'Available', 'Filled']:
             event[prop + ' Change'] = event[prop]
-            
+    return [added, lost, shared]
+
+def saveEventsData(added, lost, shared):
     for group in [added, lost, shared]:
         for event in group:
             writeEventData(event)
-
 def getLatestFile(folderPath):
     fileList = getFolderFiles(folderPath)
     
