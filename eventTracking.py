@@ -54,7 +54,12 @@ def updateEventsData():
     
     if prevDate != currentDate:
         saveUpdateDate(currentDate)
-        eventsData = getEventsData(eventSoup)
+        newData = getEventsData(eventSoup)
+        oldData = readEventsData()
+        
+        added, lost, shared = getEventsDataUpdate(newData, oldData)
+        saveEventData(added, lost, shared)
+        saveEventsData(newData)
     else:
         print('Events Data was up to date already')
 
@@ -67,6 +72,7 @@ def getCurrentDate(soup=None):
 def transformEventsListToDict(eventsList):
     eventsDict = {}
     for event in eventsList:
+        #The try / except structure here is to handle the empty set case.
         try:
             eventsDict[event['Event Code']] = event
         except:
@@ -160,10 +166,22 @@ def getEventsDataUpdate(new, old=[{}]):
             event[prop + ' Change'] = event[prop]
     return [added, lost, shared]
 
-def saveEventsData(added, lost, shared):
+def writeEventsUpdateReport(added, lost, shared):
+    for events in added:    
+        print('memems')
+    #TODO make this work
+
+def saveEventData(added, lost, shared):
     for group in [added, lost, shared]:
         for event in group:
             writeEventData(event)
+            
+def saveEventsData(data):
+    gen.listOfDictToCSV(baseFolder + 'CurrentEventsData', data)
+    
+def readEventsData():
+    return pd.read_csv(baseFolder + 'CurrentEventsData.csv').to_dict('records')
+
 def getLatestFile(folderPath):
     fileList = getFolderFiles(folderPath)
     
