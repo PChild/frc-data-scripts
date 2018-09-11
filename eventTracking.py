@@ -28,7 +28,7 @@ def getFolderFiles(folder):
     return files
 
 def saveUpdateDate(updateDate):
-    gen.listToCSV('UpdateDate', [updateDate])
+    gen.listToCSV(baseFolder + str(year) + '/UpdateDate', [updateDate])
     
 def getEventsUpdateDate(year=2018):
     path = baseFolder + '/' + str(year) + '/UpdateDate.csv'
@@ -177,10 +177,10 @@ def saveEventData(added, lost, shared):
             writeEventData(event)
             
 def saveEventsData(data):
-    gen.listOfDictToCSV(baseFolder + 'CurrentEventsData', data)
+    gen.listOfDictToCSV(baseFolder + str(year) + '/CurrentEventsData', data)
     
 def readEventsData():
-    return pd.read_csv(baseFolder + 'CurrentEventsData.csv').to_dict('records')
+    return pd.read_csv(baseFolder + str(year) + '/CurrentEventsData.csv').to_dict('records')
 
 def getLatestFile(folderPath):
     fileList = getFolderFiles(folderPath)
