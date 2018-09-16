@@ -28,9 +28,9 @@ def getFolderFiles(folder):
     return files
 
 def saveUpdateDate(updateDate):
-    gen.listToCSV('UpdateDate', [updateDate])
+    gen.listToCSV(baseFolder + str(year) + '/UpdateDate', [updateDate])
     
-def getUpdateDate(year=2018):
+def getEventsUpdateDate(year=2018):
     path = baseFolder + '/' + str(year) + '/UpdateDate.csv'
     return pd.read_csv(path)
 
@@ -50,11 +50,16 @@ def updateEventsData():
     eventSoup = getSoup()
     
     currentDate = getCurrentDate(eventSoup)
-    prevDate = getUpdateDate()
+    prevDate = getEventsUpdateDate()
     
     if prevDate != currentDate:
         saveUpdateDate(currentDate)
-        eventsData = getEventsData(eventSoup)
+        newData = getEventsData(eventSoup)
+        oldData = readEventsData()
+        
+        added, lost, shared = getEventsDataUpdate(newData, oldData)
+        saveEventData(added, lost, shared)
+        saveEventsData(newData)
     else:
         print('Events Data was up to date already')
 
@@ -67,6 +72,7 @@ def getCurrentDate(soup=None):
 def transformEventsListToDict(eventsList):
     eventsDict = {}
     for event in eventsList:
+        #The try / except structure here is to handle the empty set case.
         try:
             eventsDict[event['Event Code']] = event
         except:
@@ -102,7 +108,7 @@ def getEventsData(soup=None):
     
     return eventData
 
-def saveEventsDataUpdate(new, old=[{}]):    
+def getEventsDataUpdate(new, old=[{}]):    
     oldDict = transformEventsListToDict(old)
     newDict = transformEventsListToDict(new)
     
@@ -158,10 +164,23 @@ def saveEventsDataUpdate(new, old=[{}]):
         
         for prop in ['Capacity', 'Available', 'Filled']:
             event[prop + ' Change'] = event[prop]
-            
+    return [added, lost, shared]
+
+def writeEventsUpdateReport(added, lost, shared):
+    for events in added:    
+        print('memems')
+    #TODO make this work
+
+def saveEventData(added, lost, shared):
     for group in [added, lost, shared]:
         for event in group:
             writeEventData(event)
+            
+def saveEventsData(data):
+    gen.listOfDictToCSV(baseFolder + str(year) + '/CurrentEventsData', data)
+    
+def readEventsData():
+    return pd.read_csv(baseFolder + str(year) + '/CurrentEventsData.csv').to_dict('records')
 
 def getLatestFile(folderPath):
     fileList = getFolderFiles(folderPath)
