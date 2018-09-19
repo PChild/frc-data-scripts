@@ -280,12 +280,12 @@ def getTeamRatingData(team, yearDepth=3, YEAR=None):
             'Play Rating': playRating}
 
 def buildDraftList(key, isDistrict, eventTeams=None, year=None):
-    if eventTeams:
+    if eventTeams is not None:
       teamList = eventTeams  
     elif isDistrict:
         teamList = tba.district_teams(key, False, True)
     else:
-        teamList = tba.event_teams(key, False, True)
+        teamList = tba.event_teams(str(year) + key, False, True)
     listData = []
     for idx, team in enumerate(teamList):
         print(team)
@@ -319,12 +319,12 @@ def scoreEvent(event):
     
 def eventPrep():
     YEAR = 2018
-    KEY = "rsr"
+    KEY = "bob"
     eventCode = str(YEAR) + KEY
     
-    eventTeams = [364, 1912, 1927, 2080, 2183, 2221, 2992, 3039, 3337, 3616,
-                  3653, 3847, 3946, 4087, 4107, 4336, 4587, 4978, 5785, 5829,
-                  5863, 5930, 5965, 5997, 6489, 7094, 7325, 7331, 2992]
+    eventTeams = [225, 384, 614, 686, 888, 1629, 1719, 2106, 2199, 9999, 2377, 
+                  2534, 2537, 2539, 2849, 2912, 2914, 3389, 3793, 3941, 4050,
+                  4099, 4242, 4505, 4949, 5115, 5724, 5830, 5945, 6239]
     #eventTeams = gen.readTeamListCsv(YEAR)['Teams'].tolist()
     
     fileName = eventCode
