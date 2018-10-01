@@ -1,12 +1,12 @@
 import matplotlib.pyplot as plt
+from pathlib import Path
 import pandas as pd
 import gen
 
-def generateData():
+def generateData(datafile):
     eventData = []
-    for val in range(1,25):
+    for val in range(0,24):
         eventData.append([])
-    
     for event in tba.events(2018):
         if event['event_type'] == 0:
             alliances = tba.event_alliances(event['key'])
@@ -22,16 +22,31 @@ def generateData():
                         selectionPos = 24 - allianceNum
                     
                     teamPts = distPoints['points'][team]
-                    eventData[selectionPos].append(teamPts['alliance_points'] + teamPts['elim_points'] + teamPts['qual_points'])
-    return eventData
+                    eventData[selectionPos - 1].append(teamPts['alliance_points'] + teamPts['elim_points'] + teamPts['qual_points'])
+    frame = pd.DataFrame(eventData).transpose()
+    frame.to_csv(datafile)
+    return frame
 
-def readData():
-    print('memes')
+def readData(datafile):
+    if Path(datafile).exists():
+        return pd.read_csv(datafile, index_col=0)
+    else:
+        return generateData(datafile)
 
 def main():
-    #generateData()
-    #readData()
-    print('memes')
+    data = readData('ranksData.csv')
+    
+    baseNames = data.columns
+    nameMap = {}
+    for val in baseNames:
+        nameMap[val] = str(int(val) + 1)
+    data = data.rename(index=str, columns=nameMap)
+    
+    ax = data.plot(kind='box', title='District Points by Draft Position at 2018 FRC Regionals', figsize=(20,10))
+    ax.set_xlabel('Draft Position')
+    ax.set_ylabel('District Points')
+    
+    plt.savefig('District Points by Draft Position')
 
 if __name__ == '__main__':
     tba = gen.setup()

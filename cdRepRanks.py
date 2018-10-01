@@ -8,7 +8,7 @@ now = datetime.datetime.now()
 timeStamp = now.strftime("%Y-%m-%d")
 
 baseURL = 'https://www.chiefdelphi.com/forums/memberlist.php?&order=DESC&sort=reputation&pp=100&page='
-pagesToFetch = 422
+pagesToFetch = 424
 
 
 userRanks = []
