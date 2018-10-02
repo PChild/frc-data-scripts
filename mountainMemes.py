@@ -68,7 +68,7 @@ def updateImages(force=False):
         createImages()
         print('Updated base images.')
         createFrames()
-        print('Frames updated.')
+        print('Updated frmaes.')
         
 def getImageFiles(directory):
     return [directory + child for child in os.listdir(directory)]
@@ -182,7 +182,7 @@ def testMusic(musicFile, fps):
     mmClicks = librosa.clicks(mmBeats, sr=sampleRate, length=len(baseAudio))
     librosa.output.write_wav('BEAT_TEST_' + musicFile, baseAudio + mmClicks, sampleRate)
 
-def buildVideo(outFile, musicFile, framesFolder='./videoFrames/', fps=30):    
+def buildVideo(outFile, musicFile, framesFolder='./videoFrames/', fps=60):    
     codec = VideoWriter_fourcc(*'MP4V')
     frames = getFrames(framesFolder)
     print("Image frames:", str(len(frames)))
@@ -200,7 +200,7 @@ def buildVideo(outFile, musicFile, framesFolder='./videoFrames/', fps=30):
     else:
         firstFrame = cv2.cvtColor(numpy.array(frames[0]), cv2.COLOR_RGB2BGR)
         size = firstFrame.shape[1], firstFrame.shape[0]
-        print("Video resolution:", str(firstFrame.shape[1])+"x"+str(firstFrame.shape[0]))
+        print("Video:", str(firstFrame.shape[1])+"x"+str(firstFrame.shape[0]), '@', fps, 'FPS')
         
         vidFile = 'VIDEO_' + outFile
         vid = VideoWriter(vidFile, codec, fps, size)
