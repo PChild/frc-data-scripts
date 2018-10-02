@@ -22,7 +22,8 @@ def generateData(datafile):
                         selectionPos = 24 - allianceNum
                     
                     teamPts = distPoints['points'][team]
-                    eventData[selectionPos - 1].append(teamPts['alliance_points'] + teamPts['elim_points'] + teamPts['qual_points'])
+                    eventData[selectionPos - 1].append(teamPts['award_points'])
+                    #eventData[selectionPos - 1].append(teamPts['alliance_points'] + teamPts['elim_points'] + teamPts['qual_points'])
     frame = pd.DataFrame(eventData).transpose()
     frame.to_csv(datafile)
     return frame
@@ -42,11 +43,11 @@ def main():
         nameMap[val] = str(int(val) + 1)
     data = data.rename(index=str, columns=nameMap)
     
-    ax = data.plot(kind='box', title='District Points by Draft Position at 2018 FRC Regionals', figsize=(20,10))
+    ax = data.plot(kind='box', title='Award Points by Draft Position at 2018 FRC Regionals', figsize=(20,10))
     ax.set_xlabel('Draft Position')
-    ax.set_ylabel('District Points')
+    ax.set_ylabel('Award Points')
     
-    plt.savefig('District Points by Draft Position')
+    plt.savefig('Award Points by Draft Position')
 
 if __name__ == '__main__':
     tba = gen.setup()
