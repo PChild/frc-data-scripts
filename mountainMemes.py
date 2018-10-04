@@ -9,6 +9,7 @@ import pandas as pd
 from git import Repo
 from PIL import Image
 from tqdm import tqdm
+from mutagen.mp4 import MP4
 from cv2 import VideoWriter, VideoWriter_fourcc
 
 def updateRepoData(repoData, file=None):
@@ -225,6 +226,21 @@ def buildVideo(outFile, musicFile, framesFolder='./videoFrames/', fps=60):
         vid.release()
         print('Muxing video.')
         muxVideo(musicFile, vidFile, outFile)
+        print('Updating video metadata.')
+        
+        props = {'©ART': 'Copperhead Robotics',
+                 '©day': '2018',
+                 '©gen': 'Techno',
+                 '©cmt': 'Code at github.com/team401',
+                 '©alb': '2018 Offseason Code',
+                 '©wrt': 'FRC Team 401',
+                 '©nam': 'Code Release'}
+        
+        metaData = MP4(outFile)
+        for prop in props:
+            metaData[prop] = props[prop]
+        metaData.save()
+        
         print('Saved video:', outFile)
         os.remove(vidFile)
 

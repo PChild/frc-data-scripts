@@ -319,16 +319,16 @@ def scoreEvent(event):
     
 def eventPrep():
     YEAR = 2018
-    KEY = "cori"
+    KEY = "cacg"
     eventCode = str(YEAR) + KEY
     
-    eventTeams = [379, 447, 677, 1014, 1038, 1317, 1787, 2252, 2399, 3138,
-                  3266, 3324, 3484, 3591, 3814, 4028, 4121, 4145, 4150, 4269,
-                  4284, 4467, 4611, 4780, 5667, 5811, 6567, 6916, 6936, 7165]
+#    eventTeams = [379, 447, 677, 1014, 1038, 1317, 1787, 2252, 2399, 3138,
+#                  3266, 3324, 3484, 3591, 3814, 4028, 4121, 4145, 4150, 4269,
+#                  4284, 4467, 4611, 4780, 5667, 5811, 6567, 6916, 6936, 7165]
     #eventTeams = gen.readTeamListCsv(YEAR)['Teams'].tolist()
     
     fileName = eventCode
-    teamData = buildDraftList(KEY, False, eventTeams, YEAR)
+    teamData = buildDraftList(KEY, False, eventTeams=None, year=YEAR)
     
     if VALIDATE:
         fileName += "Validate"
