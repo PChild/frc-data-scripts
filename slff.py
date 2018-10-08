@@ -3,6 +3,7 @@ from scipy.special import erfinv
 import statistics as stat
 from pathlib import Path
 import math
+from tqdm import tqdm
 
 tba = gen.setup()
 VALIDATE = False
@@ -312,23 +313,35 @@ def teamListHelper(event):
     return teams
 
 def scoreEvent(event):
-    teams = teamListHelper(event)
-    teamScores = sorted([{'Team': team[3:], 'Score': getTeamEventPoints(team, event, True, len(teams))[0]} for team in teams], key = lambda k: k['Score'], reverse=True)
-    gen.listOfDictToCSV(event +"_scores", teamScores, ['Team', 'Score'])
+    teams = teamListHelper(event)['Teams'].tolist()
+    teamScores = []
+    
+    for team in tqdm(teams):
+        playPoints, awardPoints = getTeamEventPoints(team, event, True, len(teams))
+        totalPoints = awardPoints + playPoints
+        teamKey = team[3:]
+    
+        teamScores.append({'Team': teamKey,
+                           'Total': totalPoints, 
+                           'Play': playPoints,
+                           'Award': awardPoints})
+    
+    teamScores = sorted(teamScores, key = lambda k: k['Total'], reverse=True)
+    gen.listOfDictToCSV(event +"_scores", teamScores, ['Team', 'Total', 'Play', 'Award'])
     
     
 def eventPrep():
     YEAR = 2018
-    KEY = "cacg"
+    KEY = "iroc"
     eventCode = str(YEAR) + KEY
     
-#    eventTeams = [379, 447, 677, 1014, 1038, 1317, 1787, 2252, 2399, 3138,
-#                  3266, 3324, 3484, 3591, 3814, 4028, 4121, 4145, 4150, 4269,
-#                  4284, 4467, 4611, 4780, 5667, 5811, 6567, 6916, 6936, 7165]
+    eventTeams = [122, 339, 346, 422, 540, 611, 612, 619, 620, 623, 888, 1086,
+                  1123, 1389, 1418, 1731, 1885, 1895, 2068, 2186, 2363, 2537,
+                  2914, 3373, 4099,4472, 4514, 5115, 5338, 5549, 5830, 6239]
     #eventTeams = gen.readTeamListCsv(YEAR)['Teams'].tolist()
     
     fileName = eventCode
-    teamData = buildDraftList(KEY, False, eventTeams=None, year=YEAR)
+    teamData = buildDraftList(KEY, False, eventTeams, year=YEAR)
     
     if VALIDATE:
         fileName += "Validate"
@@ -341,7 +354,8 @@ def eventPrep():
     gen.listOfDictToCSV(fileName, teamData, colOrder)
 
 def main():
-    eventPrep()
+    print('memes')
+    #eventPrep()
 
 if __name__ == '__main__':
     main()
