@@ -1,3 +1,4 @@
+
 states = {
         'AK': 'Alaska',
         'AL': 'Alabama',
@@ -69,7 +70,7 @@ provs = {
     'NU': 'Nunavut',
     'ON': 'Ontario',
     'PE': 'Prince Edward Island',
-    'QC': 'Quebec',
+    'QC': 'Québec',
     'SK': 'Saskatchewan',
     'YT': 'Yukon'
 }
