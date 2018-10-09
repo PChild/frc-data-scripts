@@ -21,6 +21,7 @@ currentTeams = tba.district_teams(str(currentYear) + district, False, True)
 teamData = []
 for team in currentTeams:
     events = gen.readTeamCsv(team, 'events', currentYear - 1)
+    tm = tba.team(team)
     
     maxOPR = 0
     totalOPR = 0
@@ -61,11 +62,13 @@ for team in currentTeams:
     avgPoints = 0
     if yearsPlayed > 0:
         avgPoints = totalPoints / yearsPlayed 
-    teamData.append({'Team': team[3:], 
+    teamData.append({'Team': team[3:],
+                     'Region': tm['state_prov'],
+                     'Rookie Year': tm['rookie_year'],
                      'Max OPR': round(maxOPR, 2), 
                      'Avg OPR': round(avgOPR, 2), 
                      str(currentYear - 1) + ' Points': prevYearPoints,
                      'Avg Points': round(avgPoints, 2)})
     
 teamData = sorted(teamData, key= lambda k: int(k['Team']))
-gen.listOfDictToCSV(district.upper() + ' Data ' + str(currentYear - 1), teamData, ['Team', 'Avg Points', str(currentYear - 1) + ' Points', 'Max OPR', 'Avg OPR'])
+gen.listOfDictToCSV(district.upper() + ' Data ' + str(currentYear - 1), teamData, ['Team', 'Region', 'Rookie Year', 'Avg Points', str(currentYear - 1) + ' Points', 'Max OPR', 'Avg OPR'])
