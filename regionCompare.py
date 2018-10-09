@@ -1,29 +1,40 @@
 import gen
+import copy
+import geoDicts
+from tqdm import tqdm
 
 YEAR = 2018
 tba = gen.setup()
 
 regionTeams = {}
 
-usRegions = {'California': ['CA', 'California'],
-           'Texas': ['TX', 'Texas', 'NM', 'New Mexico'],
-           'Midwest': ['OK', 'Oklahoma', 'ND', 'North Dakota', 'SD', 'South Dakota',
-                       'KS', 'Kansas', 'WI', 'Wisconsin', 'IL', 'Illinois',
-                       'NE', 'Nebraska', 'MO', 'Missouri', 'IA', 'Iowa'],
-           'Desert': ['NV', 'Nevada', 'AZ', 'Arizona'],
-           'New York': ['NY', 'New York'],
-           'Mountain': ['CO', 'Colorado', 'UT', 'Utah', 'ID', 'Idaho', 'WY', 'Wyoming', 'MT', 'Montana'],
-           'South': ['Arkansas', 'LA', 'MS', 'AB'],
-           'Florida': ['FL', 'Florida'],
-           'Minnesota': ['MN', 'Minnesota'],
+usRegions = {'California': ['CA'],
+           'Texas': ['TX', 'NM'],
+           'Midwest': ['OK','ND', 'SD', 'KS', 'WI', 'IL', 'NE', 'MO', 'IA', ],
+           'Desert': ['NV', 'AZ'],
+           'New York': ['NY'],
+           'Mountain': ['CO', 'UT', 'ID', 'WY', 'MT'],
+           'South': ['AR', 'LA', 'MS', 'AL'],
+           'Florida': ['FL'],
+           'Minnesota': ['MN'],
            'WOW': ['PA', 'WV', 'OH'],
-           'South Carolina': ['SC', 'South Carolina'],
-           'Hawaii': ['HI', 'Hawaii'],
-           'Quebec': ['Quebec', 'QC'],
-           'Alberta': ['Alberta', 'AB'],
-           'British Columbia': ['British Columbia', 'BC']}
+           'South Carolina': ['SC'],
+           'Hawaii': ['HI']}
+           
+caRegions = {'Quebec': ['QC'],
+             'Alberta': ['AB'],
+             'British Columbia': ['BC']}
 
-nonUsRegions = ['Australia', 'Turkey', 'Mexico', 'Brazil', 'China']
+naRegions = {**usRegions, **caRegions}
+tmpRegions = copy.deepcopy(naRegions)
+for region in tmpRegions:
+        for state in tmpRegions[region]:
+            if region in usRegions:
+                naRegions[region].append(geoDicts.states[state])
+            else:
+                naRegions[region].append(geoDicts.provs[state])
+            
+nonNaRegions = ['Australia', 'Turkey', 'Mexico', 'Brazil', 'China']
 
 districts = [item.key for item in tba.districts(YEAR)]
 distTeams = []
@@ -33,10 +44,10 @@ for district in districts:
         regionTeams[district[4:]] = districtTeams
         distTeams += districtTeams
         
-for region in usRegions:
+for region in naRegions:
     regionTeams[region] = []
 
-for region in nonUsRegions:
+for region in nonNaRegions:
     regionTeams[region] = []
     
 teams = []
@@ -49,13 +60,15 @@ for page in range(0,20):
             
 baseTeams = teams[:]
 for team in baseTeams:
-    if team.key in distTeams:
+    if team['key'] in distTeams:
         teams.remove(team)
+        
+for team in teams:
     for region in usRegions:
-        if team.state_prov in usRegions[region]:
-            regionTeams[region].append(team.key)
+        if team['state_prov'] in naRegions[region]:
+            regionTeams[region].append(team['key'])
             teams.remove(team)
-        if team.country in nonUsRegions:
-            regionTeams[team.country].append(team.key)
+        if team['country'] in nonNaRegions:
+            regionTeams[team['country']].append(team['key'])
             teams.remove(team)
     
