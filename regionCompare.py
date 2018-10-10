@@ -3,8 +3,10 @@ import copy
 import json
 import geoDicts
 import pandas as pd
+import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+from adjustText import adjust_text
 
 YEAR = 2018
 tba = gen.setup()
@@ -107,9 +109,21 @@ def generateRegionTeamMap(force=False):
         json.dump(regionTeams, open(fileName, 'w'))
     return regionTeams    
 
+def isOutlier(value, eloList):
+    q1, q3 = np.percentile(eloList, [25, 75])
+    iqr = q3 - q1
+    
+    lowerBound = q1 - (iqr * 1.5)
+    upperBound = q3 + (iqr * 1.5)
+    
+    return value > upperBound or value < lowerBound
 
-def main():
-    regionTeams = generateRegionTeamMap()
+def isTop(value, eloList, topRange = 4):
+    eloList = sorted(eloList, reverse=True)
+    
+    return value in eloList[:topRange]
+
+def generateChart(regionTeams, outliersMarked = 5):
     eloData = pd.read_csv('2018_Elo_End.csv')
     
     regionElos = {}
@@ -122,24 +136,44 @@ def main():
                 teamElo = teamData['Elo'].values[0]
                 regionElos[region].append(teamElo)
                 
-    
     eloFrame = pd.DataFrame.from_dict(regionElos, orient='index').transpose()
     
-    meanData = []
+    medData = []
     for region in eloFrame.columns:
-        meanData.append((region, eloFrame[region].median()))
+        medData.append((region, eloFrame[region].median()))
     
-    meanData = sorted(meanData, key= lambda entry: entry[1], reverse=True)
-    colOrder = [entry[0] for entry in meanData]
+    medData = sorted(medData, key= lambda entry: entry[1], reverse=True)
+    colOrder = [entry[0] for entry in medData]
+    
+    maxTeams = max([len(regionTeams[region]) for region in colOrder])
+    widths = [len(regionTeams[region])/maxTeams + .1 for region in colOrder]
+    
     
     eloFrame = eloFrame[colOrder]
     
-    ax = eloFrame.plot(kind='box', title='FRC 2018 Elo Ratings by Region', figsize=(30,15), rot=-90)
+    ax = eloFrame.plot(kind='box', title='FRC 2018 Elo Ratings by Region', figsize=(30,15), rot=-90, widths=widths, showmeans=True, meanline=True)
     ax.set_xlabel('Region')
     ax.set_ylabel('Elo Rating')
     ax.yaxis.grid(linestyle='--')
     
+    textData = []
+    for region in regionTeams:
+        for team in regionTeams[region]:
+            teamData = eloData[eloData.Team == int(team[3:])]
+            if not teamData.empty:
+                teamElo = teamData['Elo'].values[0]
+                if isOutlier(teamElo, regionElos[region]) and isTop(teamElo, regionElos[region], outliersMarked):
+                    textData.append((colOrder.index(region) + 1, teamElo, team[3:]))
+    texts = [ax.text(entry[0], entry[1], entry[2], ha='center', va='center') for entry in textData]
+    adjust_text(texts)
+    
     plt.savefig('FRC 2018 Elo Ratings by Region')
+    
+    return ax
+
+def main():
+    regionTeams = generateRegionTeamMap()
+    generateChart(regionTeams, 6)
     
     
 if __name__ == '__main__':
