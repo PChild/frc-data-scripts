@@ -55,19 +55,12 @@ def generateRegionTeamMap(force=False):
         caList = []
         for region in caRegions:
             caList += caRegions[region]
+            
         nonNaRegions = ['Australia', 'Turkey', 'Mexico']
         china = ['China', 'Chinese Taipei', 'Singapore']
         southAmerica = ['Brazil', 'Chile', 'Colombia', 'Paraguay']
         europe = ['United Kingdom', 'France', 'Netherlands', 'Switzerland', 'Croatia', 'Czech Republic', 'Germany', 'Poland', 'Sweden', 'Norway']
-        districts = tba.districts(YEAR)
-        districtNames = [item['display_name'].replace('FIRST', '').replace(' In ', '').strip() for item in districts]
-        districtKeys = [item['key'] for item in districts]
-        distTeams = []
-        for idx, district in enumerate(districtKeys):
-            if district != '2018tx':
-                districtTeams = tba.district_teams(district, False, True)
-                regionTeams[districtNames[idx]] = districtTeams
-                distTeams += districtTeams        
+        
         for region in usRegions:
             regionTeams[region] = []
         for region in caRegions:
@@ -78,6 +71,17 @@ def generateRegionTeamMap(force=False):
         regionTeams['China'] = []
         regionTeams['South America'] = []
         
+        districts = tba.districts(YEAR)
+        districtNames = [item['display_name'].replace('FIRST', '').replace(' In ', '').strip() for item in districts]
+        districtKeys = [item['key'] for item in districts]
+        distTeams = []
+        
+        for idx, district in enumerate(districtKeys):
+            if district != '2018tx':
+                districtTeams = tba.district_teams(district, False, True)
+                regionTeams[districtNames[idx]] = districtTeams
+                distTeams += districtTeams        
+            
         teams = []
         print('Fetching teams')
         for page in tqdm(range(0,20)):
@@ -88,14 +92,13 @@ def generateRegionTeamMap(force=False):
                     teams += newTeams         
         baseTeams = teams[:]
         teamCount = len(baseTeams)
-        print('Removing district teams')
-        for team in tqdm(baseTeams):
+        for team in baseTeams:
             if team['key'] in distTeams:
                 teams.remove(team)
         baseTeams = teams[:]      
-        print('\nFinding non NA teams')
         notInSetCount = 0
         notRepresented = {}
+        print('Problem teams:')
         for team in baseTeams:
             notListed = True
             if team['country'] in nonNaRegions:
@@ -161,7 +164,7 @@ def isTop(value, eloList, topRange = 4):
     return value in eloList[:topRange]
 
 def generateChart(regionTeams, outliersMarked = 5):
-    eloData = pd.read_csv('2018_Elo_End.csv')
+    eloData = pd.read_csv('2018_Elo_end.csv')
     
     regionElos = {}
     
@@ -209,7 +212,7 @@ def generateChart(regionTeams, outliersMarked = 5):
     return ax
 
 def main():
-    regionTeams = generateRegionTeamMap(True)
+    regionTeams = generateRegionTeamMap()
     generateChart(regionTeams, 6)
     
     
