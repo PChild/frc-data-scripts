@@ -27,6 +27,7 @@ def generateRegionTeamMap(force=False):
                    'Midwest': ['OK','ND', 'SD', 'KS', 'WI', 'IL', 'NE', 'MO', 'IA', ],
                    'Desert': ['NV', 'AZ'],
                    'New York': ['NY'],
+                   'Bluegrass': ['TN', 'KY'],
                    'Mountain': ['CO', 'UT', 'ID', 'WY', 'MT'],
                    'South': ['AR', 'LA', 'MS', 'AL'],
                    'Florida': ['FL'],
@@ -35,7 +36,8 @@ def generateRegionTeamMap(force=False):
                    'South Carolina': ['SC'],
                    'Hawaii': ['HI']}           
         caRegions = {'Quebec': ['QC'],
-                     'Alberta': ['AB'],
+                     'Alberta': ['AB', 'SK'],
+                     'Ontario': ['ON'],
                      'British Columbia': ['BC']}
         tmpRegions = copy.deepcopy(usRegions)
         for region in tmpRegions:
@@ -53,7 +55,10 @@ def generateRegionTeamMap(force=False):
         caList = []
         for region in caRegions:
             caList += caRegions[region]
-        nonNaRegions = ['Australia', 'Turkey', 'Mexico', 'Brazil', 'China']
+        nonNaRegions = ['Australia', 'Turkey', 'Mexico']
+        china = ['China', 'Chinese Taipei', 'Singapore']
+        southAmerica = ['Brazil', 'Chile', 'Colombia', 'Paraguay']
+        europe = ['United Kingdom', 'France', 'Netherlands', 'Switzerland', 'Croatia', 'Czech Republic', 'Germany', 'Poland', 'Sweden', 'Norway']
         districts = tba.districts(YEAR)
         districtNames = [item['display_name'].replace('FIRST', '').replace(' In ', '').strip() for item in districts]
         districtKeys = [item['key'] for item in districts]
@@ -68,7 +73,11 @@ def generateRegionTeamMap(force=False):
         for region in caRegions:
             regionTeams[region] = []
         for region in nonNaRegions:
-            regionTeams[region] = []    
+            regionTeams[region] = []
+        regionTeams['Europe'] = []
+        regionTeams['China'] = []
+        regionTeams['South America'] = []
+        
         teams = []
         print('Fetching teams')
         for page in tqdm(range(0,20)):
@@ -78,6 +87,7 @@ def generateRegionTeamMap(force=False):
                 else:
                     teams += newTeams         
         baseTeams = teams[:]
+        teamCount = len(baseTeams)
         print('Removing district teams')
         for team in tqdm(baseTeams):
             if team['key'] in distTeams:
@@ -85,30 +95,55 @@ def generateRegionTeamMap(force=False):
         baseTeams = teams[:]      
         print('\nFinding non NA teams')
         notInSetCount = 0
-        for team in tqdm(baseTeams):
+        notRepresented = {}
+        for team in baseTeams:
             notListed = True
             if team['country'] in nonNaRegions:
                     regionTeams[team['country']].append(team['key'])
                     notListed = False
-            else:
-                if team['state_prov'] in usList and team['country'] == 'USA':
-                    for region in usRegions:
-                        if team['state_prov']  in usRegions[region]:
-                            regionTeams[region].append(team['key'])
-                            notListed = False
-                            break
-                if team['state_prov'] in caList and team['country'] in ['Canada', 'CA']:
-                    for region in caRegions:
-                        if team['state_prov'] in caRegions[region]:
-                            regionTeams[region].append(team['key'])
-                            notListed = False
-                            break
+            if team['country'] in europe:
+                    regionTeams['Europe'].append(team['key'])
+                    notListed = False
+            if team['country'] in china:
+                    notListed = False
+                    regionTeams['China'].append(team['key'])
+            if team['country'] in southAmerica:
+                    notListed = False
+                    regionTeams['South America'].append(team['key'])
+            if team['state_prov'] in usList and team['country'] == 'USA':
+                for region in usRegions:
+                    if team['state_prov']  in usRegions[region]:
+                        regionTeams[region].append(team['key'])
+                        notListed = False
+                        break
+            if team['state_prov'] in caList and team['country'] in ['Canada', 'CA']:
+                for region in caRegions:
+                    if team['state_prov'] in caRegions[region]:
+                        regionTeams[region].append(team['key'])
+                        notListed = False
+                        break
+            if notListed:
+                print(team['key'])
+                if team['country'] in notRepresented:
+                    notRepresented[team['country']] += 1
+                else:
+                    notRepresented[team['country']] = 1
+                    
             notInSetCount += notListed
             teamIdx = next((index for (index, d) in enumerate(teams) if d['key'] == team['key']), None)
             if teamIdx is not None:
                 del teams[teamIdx]
-        print('\n',notInSetCount, 'out of', len(baseTeams), 'are not represented in regions.')
+        countryList = []
+        for country in notRepresented:
+            countryList.append((country, notRepresented[country]))
+        countryList = sorted(countryList, key= lambda entry: entry[1], reverse=True)
+        print(notInSetCount, 'out of', teamCount, 'are not represented.')
+        print(len(countryList), 'countries are not represented.')
+        for entry in countryList:
+            print(entry[0], '-', entry[1], 'teams')
+        
         json.dump(regionTeams, open(fileName, 'w'))
+        
     return regionTeams    
 
 def isOutlier(value, eloList):
@@ -174,7 +209,7 @@ def generateChart(regionTeams, outliersMarked = 5):
     return ax
 
 def main():
-    regionTeams = generateRegionTeamMap()
+    regionTeams = generateRegionTeamMap(True)
     generateChart(regionTeams, 6)
     
     
