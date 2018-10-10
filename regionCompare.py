@@ -54,12 +54,14 @@ def generateRegionTeamMap(force=False):
         for region in caRegions:
             caList += caRegions[region]
         nonNaRegions = ['Australia', 'Turkey', 'Mexico', 'Brazil', 'China']
-        districts = [item.key for item in tba.districts(YEAR)]
+        districts = tba.districts(YEAR)
+        districtNames = [item['display_name'].replace('FIRST', '').replace(' In ', '').strip() for item in districts]
+        districtKeys = [item['key'] for item in districts]
         distTeams = []
-        for district in districts:
+        for idx, district in enumerate(districtKeys):
             if district != '2018tx':
                 districtTeams = tba.district_teams(district, False, True)
-                regionTeams[district[4:].upper()] = districtTeams
+                regionTeams[districtNames[idx]] = districtTeams
                 distTeams += districtTeams        
         for region in usRegions:
             regionTeams[region] = []
