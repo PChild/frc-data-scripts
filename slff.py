@@ -332,12 +332,11 @@ def scoreEvent(event):
     
 def eventPrep():
     YEAR = 2018
-    KEY = "iroc"
+    KEY = "nhgc"
     eventCode = str(YEAR) + KEY
     
-    eventTeams = [122, 339, 346, 422, 540, 611, 612, 619, 620, 623, 888, 1086,
-                  1123, 1389, 1418, 1731, 1885, 1895, 2068, 2186, 2363, 2537,
-                  2914, 3373, 4099,4472, 4514, 5115, 5338, 5549, 5830, 6239]
+    eventTeams = [131, 166, 238, 319, 501, 811, 1058, 1073, 1247, 1519, 1721,
+                  1729, 1831, 1922, 2342, 3323, 3499, 4925, 4958, 6324, 6763, 7133]
     #eventTeams = gen.readTeamListCsv(YEAR)['Teams'].tolist()
     
     fileName = eventCode
@@ -355,7 +354,7 @@ def eventPrep():
 
 def main():
     print('memes')
-    #eventPrep()
+    eventPrep()
 
 if __name__ == '__main__':
     main()
