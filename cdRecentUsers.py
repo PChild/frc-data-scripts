@@ -1,5 +1,7 @@
 from robobrowser import RoboBrowser
 from multiprocessing import Pool
+import time
+import gen
 
 baseURL = 'https://www.chiefdelphi.com/forums/memberlist.php?do=getall&page='
 options = '&pp=100&order=asc&sort=username&lastpostafter=2018-01-01'
@@ -22,11 +24,10 @@ def getPageCount():
     return pageCount
 
 def getUserAge(uid):
-    browser = RoboBrowser(parser='html.parser', history=False)
+    browser = RoboBrowser(parser='html.parser')
     
     url = 'https://www.chiefdelphi.com/forums/member.php?u=' + str(uid)
     browser.open(url)
-    
     
     #Iterate over the td elements, the lowest level one should have two children
     #a strong tag and a br tag. Find the text after br tag, strip off bs.
@@ -40,20 +41,57 @@ def getUserAge(uid):
                 age = int(ageVal)
     return age
     
-
 def processPage(pageVal):
     ageValues = []
     noAgeCount = 0
+    usersProcessed = 0
     
     browser = RoboBrowser(parser='html.parser')
     browser.open(baseURL + str(pageVal) + options)
     
-    #in here find all the user rows and then fire off getUserAge calls
-    #track how many 'none' values we get, log the ages.
+    #Find all the links on the page, if the href in a link has member.php in it then
+    #it's a member link, so pull out the uid from it and add that uid to the list
+    userIDs = [link['href'].split('u=')[1] for link in browser.find_all('a', href=True) if 'member.php?' in link['href']]
+    usersProcessed = len(userIDs)
+    
+    for user in userIDs:
+        age = getUserAge(user)
+        time.sleep(1)
+        noAgeCount += age is None
+        
+        if age is not None:
+            ageValues.append(age)
+            
+    return [ageValues, noAgeCount, usersProcessed]
 
 def main():
+    #Record what time we start, figure out how many pages we're going to scrape,
+    #and set the pool to run with 8 workers.
+    start = time.time()
     pageCount = getPageCount()
-    print(pageCount)
+    pool = Pool(processes=8)
+    
+    #resultSet will be a list of lists with each sublist containing the output
+    #from processPage
+    resultSet = pool.map(processPage, range(1, pageCount + 1))
+    
+    #This code just itereates through the result set and combines them
+    ages = []
+    noAgeCount = 0
+    usersProcessed = 0
+    for entry in resultSet:
+        ages += entry[0]
+        noAgeCount += entry[1]
+        usersProcessed += entry[2]
+        
+    #Figure out how long the script took to run
+    end = time.time()
+    diff = round((end - start)/60,1)
+    
+    #Save the age data and then print some basic info 
+    gen.listToCSV('CD-Ages-' + time.strftime('%Y-%m-%d'), ages)
+    print(noAgeCount, 'out of', usersProcessed, 'had no age set. :(')
+    print('Scraping run took', diff, 'minutes.')
     
 
 if __name__ == '__main__':

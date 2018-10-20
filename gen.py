@@ -112,7 +112,7 @@ def listToCSV(filename, listObj):
     f = open(filename + ".csv", 'w', encoding='utf-8')
     
     for item in listObj:
-        f.write(item + "\n")
+        f.write(str(item) + "\n")
     f.close()
     
     
