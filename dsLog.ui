@@ -22,22 +22,12 @@
     <height>480</height>
    </size>
   </property>
+  <property name="focusPolicy">
+   <enum>Qt::StrongFocus</enum>
+  </property>
   <property name="windowTitle">
    <string notr="true">DS Log Converter</string>
   </property>
-  <widget class="QToolButton" name="addButton">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>10</y>
-     <width>141</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Add Log Files</string>
-   </property>
-  </widget>
   <widget class="QListWidget" name="inputList">
    <property name="geometry">
     <rect>
@@ -46,19 +36,6 @@
      <width>341</width>
      <height>201</height>
     </rect>
-   </property>
-  </widget>
-  <widget class="QToolButton" name="outButton">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>260</y>
-     <width>101</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Set Out File</string>
    </property>
   </widget>
   <widget class="QPushButton" name="runButton">
@@ -93,6 +70,32 @@
      <width>341</width>
      <height>31</height>
     </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="addButton">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>121</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Add Log File</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="outButton">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>260</y>
+     <width>121</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Set Out File</string>
    </property>
   </widget>
  </widget>
