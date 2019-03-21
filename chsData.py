@@ -1,4 +1,5 @@
 import gen
+import pandas as pd
 
 tba = gen.setup()
 currentYear = 2019
@@ -16,7 +17,8 @@ for year in years:
     yearData[yr]['Teams'] = tba.district_teams(dist, False, True)
     yearData[yr]['Points'] = {t['team_key']: t['point_total'] for t in tba.district_rankings(dist)}
     
-currentTeams = tba.district_teams(str(currentYear) + district, False, True)
+#currentTeams = tba.district_teams(str(currentYear) + district, False, True)
+currentTeams = pd.read_csv('Chs_Teams_11_1.csv')['Teams']
 
 teamData = []
 for team in currentTeams:
