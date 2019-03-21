@@ -5,14 +5,14 @@ import geoDicts
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-import matplotlib.pyplot as plt
-from adjustText import adjust_text
+#import matplotlib.pyplot as plt
+#from adjustText import adjust_text
 
-YEAR = 2018
+YEAR = 2019
 tba = gen.setup()
 
 def generateRegionTeamMap(force=False):
-    fileName = 'teamRegionMapping.json'
+    fileName = 'allTimeTeamRegionMapping.json'
     
     try:
         if not force:
@@ -23,6 +23,7 @@ def generateRegionTeamMap(force=False):
     if force:
         regionTeams = {}
         usRegions = {'California': ['CA'],
+                     'Chesapeake' : ['VA', 'MD', 'DC']
                    'Texas': ['TX', 'NM'],
                    'Midwest': ['OK','ND', 'SD', 'KS', 'WI', 'IL', 'NE', 'MO', 'IA', ],
                    'Desert': ['NV', 'AZ'],
@@ -34,6 +35,8 @@ def generateRegionTeamMap(force=False):
                    'Minnesota': ['MN'],
                    'WOW': ['PA', 'WV', 'OH'],
                    'South Carolina': ['SC'],
+                   'Peachtree': ['GA'],
+                   'Texas': ['TX', 'NM']
                    'Hawaii': ['HI']}           
         caRegions = {'Quebec': ['QC'],
                      'Alberta': ['AB', 'SK'],
@@ -84,8 +87,8 @@ def generateRegionTeamMap(force=False):
             
         teams = []
         print('Fetching teams')
-        for page in tqdm(range(0,20)):
-                newTeams = tba.teams(page, YEAR)
+        for page in tqdm(range(0,30)):
+                newTeams = tba.teams(page)
                 if newTeams == []:
                     break;
                 else:
@@ -212,8 +215,8 @@ def generateChart(regionTeams, outliersMarked = 5):
     return ax
 
 def main():
-    regionTeams = generateRegionTeamMap()
-    generateChart(regionTeams, 6)
+    generateRegionTeamMap(True)
+    #generateChart(regionTeams, 6)
     
     
 if __name__ == '__main__':
