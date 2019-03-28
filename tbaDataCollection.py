@@ -148,7 +148,7 @@ def saveTeamEvents(year, team):
 
 def removeTeamAwards(year, team):
     fileExists, fullPath = filePathHandler('teams', team, 'awards', year)
-    outFile = Path(fullPath)    
+    outFile = Path(fullPath + '.csv')    
     
     if fileExists:
         outFile.unlink()
@@ -185,21 +185,24 @@ def removeThenSaveTeamAwards(year, team):
     saveTeamAwards(year,team)
 
 def main():
+    startYear = 2019
+    endYear = 2019
     pool = Pool()
-    pool.map(saveTeamList, range(1992, 2019))
+    #pool.map(saveTeamList, range(startYear, endYear + 1))
     
-    for year in range(1992, 2019):
+    for year in range(startYear, endYear + 1):
         print("On year", year)
-        eventList = tba.events(year, False, True)
-        pool.map(saveEventTeamList, eventList)
-#        pool.map(saveEventRankings, eventList)
-#        pool.map(saveEventOPRs, eventList)
-#        pool.map(saveEventInfo, eventList)
-#
-#        teamList = gen.readTeamListCsv(year)
-#        pool.map(partial(saveTeamEvents, year), teamList['Teams'])
-#        pool.map(partial(saveTeamAwards, year), teamList['Teams'])
-#        pool.map(partial(saveTeamYearMatches, year), teamList['Teams'])
+        #eventList = tba.events(year, False, True)
+        #pool.map(saveEventTeamList, eventList)
+        #pool.map(saveEventRankings, eventList)
+        #pool.map(saveEventOPRs, eventList)
+        #pool.map(saveEventInfo, eventList)
+
+        #teamList = gen.readTeamListCsv(year)
+        #pool.map(partial(saveTeamEvents, year), teamList['Teams'])
+        #pool.map(partial(saveTeamAwards, year), teamList['Teams'])
+        #pool.map(partial(removeThenSaveTeamAwards, year), teamList['Teams'])
+        #pool.map(partial(saveTeamYearMatches, year), teamList['Teams'])
     pool.close()
     pool.join()
     

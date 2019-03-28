@@ -116,13 +116,14 @@ def listToCSV(filename, listObj):
     f.close()
     
     
-def listOfDictToCSV(filename, listObj, colOrder=None):
+def listOfDictToCSV(filename, listObj, colOrder=None, header=True):
     '''
     Saves a list of flat dictionaries out to a csv.
     
     :param filename: The file to write to
     :param listObj: The list of objects to write out
     :param colOrder: An array specifying the order to write columns in.
+    :param header: Whether to include header row
     '''
     
     f = open(filename + ".csv", 'w', encoding='utf-8')
@@ -132,14 +133,15 @@ def listOfDictToCSV(filename, listObj, colOrder=None):
     if colOrder:
         keys = colOrder
     
-    for (idx, prop) in enumerate(keys):
-        tail = ", "
-        
-        if idx == len(keys) - 1:
-            tail = ""
+    if header:
+        for (idx, prop) in enumerate(keys):
+            tail = ", "
             
-        f.write(prop + tail)
-    f.write("\n")
+            if idx == len(keys) - 1:
+                tail = ""
+                
+            f.write(prop + tail)
+        f.write("\n")
     
     for team in listObj:
         for (idx, prop) in enumerate(keys):
