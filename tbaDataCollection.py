@@ -80,6 +80,38 @@ def saveEventOPRs(event):
         except Exception as e:
             print(e)
 
+def saveEventAwards(event):
+    year = event[:4]
+    basePath = '..\\tba\\events\\' + year + '\\'
+    eventAwards = tba.event_awards(event)
+    
+    awardsData = []
+    if eventAwards: 
+        for award in eventAwards:
+            for idx, recip in enumerate(award['recipient_list']):
+                awardsData.append({'awardString': event + '_' + str(award['award_type']),
+                                   'awardName': award['name'],
+                                   'awardTeam': award['recipient_list'][idx]['team_key'],
+                                   'awardPerson': award['recipient_list'][idx]['awardee']})
+        
+        colOrder = ['awardString', 'awardName', 'awardTeam', 'awardPerson']
+        gen.listOfDictToCSV(basePath + event + '\\' + event + '_awards', awardsData, colOrder, False)
+
+def saveEventAlliances(event):
+    fileExists, fullPath = filePathHandler('events', event, 'alliances')
+
+    alliances = []
+    try:
+        eventAlliances = tba.event_alliances(event)
+    
+        for alliance in eventAlliances:
+            alliances.append({'Captain': alliance['picks'][0],
+                             'First': alliance['picks'][1],
+                             'Second': alliance['picks'][2]})
+        gen.listOfDictToCSV(fullPath, alliances, ['Captain', 'First', 'Second'], False)
+    except:
+       pass
+
 def saveTeamList(year):
     fileExists, fullPath = filePathHandler('teams', None, 'teams', year)
 
@@ -165,6 +197,7 @@ def saveTeamAwards(year, team):
 
                 if awardsExist:
                     evAwards = pd.read_csv(awardsPath +'.csv', index_col=False, names=['Award', 'Name', 'Team'])
+                    evAwards.Team = evAwards.Team.str.strip()
                     
                     if type(evAwards['Team'][0]) is not str:
                         evAwards['Team'] = 'frc' + evAwards['Team'].astype(str)
@@ -176,7 +209,7 @@ def saveTeamAwards(year, team):
                         awardName = row['Name']
                         teamYearAwards.append({'Event': event, 'Type': awardType, 'Name': awardName})
             colOrder = ['Event', 'Type', 'Name']
-            gen.listOfDictToCSV(fullPath, teamYearAwards, colOrder)
+            gen.listOfDictToCSV(fullPath, teamYearAwards, colOrder, False)
         except Exception as e:
             print(e)
 
@@ -188,18 +221,19 @@ def main():
     startYear = 2019
     endYear = 2019
     pool = Pool()
-    #pool.map(saveTeamList, range(startYear, endYear + 1))
+    pool.map(saveTeamList, range(startYear, endYear + 1))
     
     for year in range(startYear, endYear + 1):
         print("On year", year)
         #eventList = tba.events(year, False, True)
+        #pool.map(saveEventAlliances, eventList)
         #pool.map(saveEventTeamList, eventList)
         #pool.map(saveEventRankings, eventList)
         #pool.map(saveEventOPRs, eventList)
         #pool.map(saveEventInfo, eventList)
 
-        #teamList = gen.readTeamListCsv(year)
-        #pool.map(partial(saveTeamEvents, year), teamList['Teams'])
+        teamList = gen.readTeamListCsv(year)
+        pool.map(partial(saveTeamEvents, year), teamList['Teams'])
         #pool.map(partial(saveTeamAwards, year), teamList['Teams'])
         #pool.map(partial(removeThenSaveTeamAwards, year), teamList['Teams'])
         #pool.map(partial(saveTeamYearMatches, year), teamList['Teams'])

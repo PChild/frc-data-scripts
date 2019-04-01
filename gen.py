@@ -143,14 +143,14 @@ def listOfDictToCSV(filename, listObj, colOrder=None, header=True):
             f.write(prop + tail)
         f.write("\n")
     
-    for team in listObj:
+    for item in listObj:
         for (idx, prop) in enumerate(keys):
             tail = ", "
             
             if idx == len(keys) - 1:
                 tail = ""
                 
-            f.write(str(team[prop]) + tail)
+            f.write(str(item[prop]) + tail)
         f.write("\n")
     f.close()
     

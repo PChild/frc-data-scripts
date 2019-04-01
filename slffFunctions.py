@@ -1,5 +1,6 @@
 import gen
 import math
+import statistics as stat
 from tqdm import tqdm
 from scipy.special import erfinv
 
@@ -37,7 +38,7 @@ def getPlayPoints(team, event):
         rankPoints = math.ceil(abs(erfinv( (teamCount - 2 * teamRank + 2) /  (alpha * teamCount)) * 10 / erfinv( 1 / alpha ) + 12 ))
     
         names = ['captain', 'firstPick', 'secondPick']
-        
+
         aL = gen.readEventCsv(event, 'alliances', names)
         aLL = aL[(aL.captain == team) | (aL.firstPick == team) | (aL.secondPick == team)]
         if len(aLL) > 0:
@@ -84,7 +85,7 @@ def getAwardPoints(team, event):
     awardPoints = 0
     awardNames = []
 
-    tya = gen.readTeamCsv(team, 'awards', event[:4])
+    tya = gen.readTeamCsv(team, 'awards', event[:4], ['Event', 'Type', 'Name'])
     if tya is not None:
         teamEventAwards = tya[tya.Event == event]
         
@@ -111,3 +112,58 @@ def fetchNormalEventData(year=2019):
         if event['event_type'] in NORMAL_EVENTS:
             eventData[event['key']]= event['week']
     return eventData
+
+def getPerformanceData(team, year):
+    team = gen.teamString(team)
+    oprs = []
+    wins = 0
+    losses = 0
+    ties = 0
+    
+    try:
+        matches = gen.readTeamCsv(team, 'matches', year)  
+        if len(matches) > 0:
+            for idx, match in matches.iterrows():
+                result = gen.matchResult(team, match)
+                wins += 'WIN' == result
+                losses += 'LOSS' == result
+                ties += 'TIE' == result
+    except:
+        pass
+        
+    try:
+        events = gen.readTeamCsv(team, 'events', year)
+        if len(events) > 0:    
+            for idx, e in events.iterrows():                    
+                    try:
+                        eOprs = gen.readEventCsv(e['Event'], 'opr')
+                        teamOPR = eOprs[eOprs.Team == team]['OPR'].values[0]
+                        oprs.append(teamOPR)
+                    except Exception as e:
+                        pass
+    except:
+        pass
+        
+        
+    if len(oprs) is 0:
+        maxOPR = 0
+        avgOPR = 0
+    else:
+        maxOPR = max(oprs)
+        avgOPR = stat.mean(oprs)
+    
+    played = wins + losses + ties
+    winPercent = 0
+    
+    if played > 0:
+        winPercent = wins / played
+    
+    teamKey = gen.teamNumber(team)
+    
+    return {'Team': teamKey, 
+            'Max OPR': maxOPR, 
+            'Avg OPR': avgOPR, 
+            'Wins': wins, 
+            'Losses': losses, 
+            'Ties': ties, 
+            'Win %': winPercent}
