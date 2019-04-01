@@ -21,7 +21,8 @@ for year in yearRange:
     teamList[year] = gen.readTeamListCsv(year)['Teams'].tolist()
     eventList[year] = slff.fetchNormalEventData(year)
 
-teams = gen.readTeamListCsv(2019)['Teams'].tolist()
+#teams = gen.readTeamListCsv(2019)['Teams'].tolist()
+teams = tba.district_teams('2019tx', False, True)
 #teams = ['frc125', 'frc401', 'frc7179']
 
 eventFields = ['Code', 'Type', 'Week', 'Total Points', 'Award Points', 'Award Names', 'Draft Points', 'Rank Points', 'Elim Points', 'Rank']
@@ -74,5 +75,5 @@ for year in yearRange:
                key = field + ' ' + str(eventCounter) 
                teamDict[key] = event[field]
         yearData.append(teamDict)
-    gen.listOfDictToCSV(str(year) + ' SLFF Data', yearData, prepFields())
+    gen.listOfDictToCSV(str(year) + ' TX Data', yearData, prepFields())
         

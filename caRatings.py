@@ -51,4 +51,4 @@ for team in teams:
             teamRecord['rating'] += (caCount * CA_WEIGHT + eiCount * EI_WEIGHT + entCount * ENT_WEIGHT) / (YEAR - year + 1)
     winners.append(teamRecord)
 
-gen.listOfDictToCSV("caRatings", winners)
+gen.listOfDictToCSV(DISTRICT.upper() +"caRatings", winners)
