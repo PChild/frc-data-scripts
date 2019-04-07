@@ -6,10 +6,10 @@ from tqdm import tqdm
 
 tba = gen.setup()
 
-dist = 'isr'
+dist = 'in'
 year = 2019
 
-cmpTypes = [eventTypes.DISTRICT_CMP, eventTypes.DISTRICT_CMP_DIVISION, eventTypes.CMP_DIVISION, eventTypes.CMP_FINALS]
+cmpTypes = [eventTypes.PRESEASON, eventTypes.DISTRICT_CMP, eventTypes.DISTRICT_CMP_DIVISION, eventTypes.CMP_DIVISION, eventTypes.CMP_FINALS]
 
 print('Fetching district events')
 distEvents = tba.district_events(str(year) + dist)

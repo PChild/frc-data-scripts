@@ -135,7 +135,7 @@ def listOfDictToCSV(filename, listObj, colOrder=None, header=True):
     
     if header:
         for (idx, prop) in enumerate(keys):
-            tail = ", "
+            tail = ","
             
             if idx == len(keys) - 1:
                 tail = ""
@@ -145,7 +145,7 @@ def listOfDictToCSV(filename, listObj, colOrder=None, header=True):
     
     for item in listObj:
         for (idx, prop) in enumerate(keys):
-            tail = ", "
+            tail = ","
             
             if idx == len(keys) - 1:
                 tail = ""
