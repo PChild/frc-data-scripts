@@ -28,6 +28,8 @@ def filePathHandler(teamsOrEvents, code=None, dataType=None, year=None):
 def saveTeamYearMatches(year, team):
     fileExists, fullPath = filePathHandler('teams', team, 'matches', year)
     
+    fileExists = False
+    
     if not fileExists:
         try:
             teamEvents = gen.readTeamCsv(team, 'events', year)
@@ -40,6 +42,8 @@ def saveTeamYearMatches(year, team):
 
 def saveEventInfo(event):
     fileExists, fullPath = filePathHandler('events', event, 'info')
+
+    fileExists = False
 
     if not fileExists:
         try:
@@ -57,6 +61,8 @@ def saveEventInfo(event):
 def saveEventRankings(event):
     fileExists, fullPath = filePathHandler('events', event, 'rankings')
 
+    fileExists = False
+
     if not fileExists:
         try:
             rawRanks = tba.event_rankings(event)['rankings']
@@ -69,6 +75,8 @@ def saveEventRankings(event):
 
 def saveEventOPRs(event):
     fileExists, fullPath = filePathHandler('events', event, 'opr')
+    
+    fileExists = False
     
     if not fileExists:
         try:
@@ -115,6 +123,8 @@ def saveEventAlliances(event):
 def saveTeamList(year):
     fileExists, fullPath = filePathHandler('teams', None, 'teams', year)
 
+    fileExists = False
+    
     if not fileExists:
         try:
             teams = []
@@ -133,6 +143,8 @@ def find(listObj, key, value):
 
 def saveEventTeamList(event):
     fileExists, fullPath = filePathHandler('events', event, 'teams')
+    
+    fileExists = False
     
     if not fileExists:
         try:
@@ -163,6 +175,8 @@ def removeEventTeamList(event):
  
 def saveTeamEvents(year, team):
     fileExists, fullPath = filePathHandler('teams', team, 'events', year)
+    
+    fileExists = False
     
     if not fileExists:
         try:
@@ -195,6 +209,7 @@ def removeTeamAwards(year, team):
 def saveTeamAwards(year, team):
     fileExists, fullPath = filePathHandler('teams', team, 'awards', year)    
     eventData = gen.readTeamCsv(team, 'events', year)
+    fileExists = False
     
     if not fileExists:
         try:
@@ -248,8 +263,8 @@ def main():
         teamList = gen.readTeamListCsv(year)
         #pool.map(partial(saveTeamEvents, year), teamList['Teams'])
         #pool.map(partial(saveTeamAwards, year), teamList['Teams'])
-        pool.map(partial(removeThenSaveTeamAwards, year), teamList['Teams'])
-        #pool.map(partial(saveTeamYearMatches, year), teamList['Teams'])
+        #pool.map(partial(removeThenSaveTeamAwards, year), teamList['Teams'])
+        pool.map(partial(saveTeamYearMatches, year), teamList['Teams'])
     pool.close()
     pool.join()
     
