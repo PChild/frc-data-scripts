@@ -6,10 +6,12 @@ from tqdm import tqdm
 
 tba = gen.setup()
 
-dist = 'in'
+dist = 'fim'
 year = 2019
 
-cmpTypes = [eventTypes.PRESEASON, eventTypes.DISTRICT_CMP, eventTypes.DISTRICT_CMP_DIVISION, eventTypes.CMP_DIVISION, eventTypes.CMP_FINALS]
+cmpTypes = [eventTypes.DISTRICT_CMP, eventTypes.DISTRICT_CMP_DIVISION]
+ignoreTypes = cmpTypes + [eventTypes.PRESEASON, eventTypes.CMP_DIVISION, eventTypes.CMP_FINALS]
+
 
 print('Fetching district events')
 distEvents = tba.district_events(str(year) + dist)
@@ -46,7 +48,7 @@ for team in tqdm(dcmpTeams):
     teamData['ranks'] = []
     
     for event in teamEvents:
-        if event['event_type'] not in cmpTypes:
+        if event['event_type'] not in ignoreTypes:
             playPts = slffFunctions.getPlayPoints(team, event['key'])
             awardPts = slffFunctions.getAwardPoints(team, event['key'])
 
