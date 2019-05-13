@@ -1,7 +1,7 @@
 from multiprocessing import Pool
-from functools import partial
 from pathlib import Path
 import pandas as pd
+from functools import partial
 import gen
 
 tba = gen.setup()
@@ -42,6 +42,8 @@ def saveTeamYearMatches(year, team):
 
 def saveEventInfo(event):
     fileExists, fullPath = filePathHandler('events', event, 'info')
+    
+    fileExists = False
 
     fileExists = False
 
@@ -60,6 +62,8 @@ def saveEventInfo(event):
 
 def saveEventRankings(event):
     fileExists, fullPath = filePathHandler('events', event, 'rankings')
+    
+    fileExists = False
 
     fileExists = False
 
@@ -122,6 +126,8 @@ def saveEventAlliances(event):
 
 def saveTeamList(year):
     fileExists, fullPath = filePathHandler('teams', None, 'teams', year)
+    
+    fileExists = False
 
     fileExists = False
     
@@ -211,6 +217,8 @@ def saveTeamAwards(year, team):
     eventData = gen.readTeamCsv(team, 'events', year)
     fileExists = False
     
+    fileExists = False
+    
     if not fileExists:
         try:
             teamYearAwards = []
@@ -264,7 +272,7 @@ def main():
         #pool.map(partial(saveTeamEvents, year), teamList['Teams'])
         #pool.map(partial(saveTeamAwards, year), teamList['Teams'])
         #pool.map(partial(removeThenSaveTeamAwards, year), teamList['Teams'])
-        #pool.map(partial(saveTeamYearMatches, year), teamList['Teams'])
+        pool.map(partial(saveTeamYearMatches, year), teamList['Teams'])
     pool.close()
     pool.join()
     

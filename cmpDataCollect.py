@@ -6,28 +6,17 @@ from tqdm import tqdm
 
 tba = gen.setup()
 
-dist = 'ont'
+evt = 'tur'
 year = 2019
 
-cmpTypes = [eventTypes.DISTRICT_CMP, eventTypes.DISTRICT_CMP_DIVISION]
-ignoreEvents = cmpTypes + [eventTypes.CMP_DIVISION, eventTypes.CMP_FINALS, eventTypes.PRESEASON]
-
-
-print('Fetching district events')
-distEvents = tba.district_events(str(year) + dist)
-dcmpEvents = [event for event in distEvents if event['event_type'] in cmpTypes]
+ignoreTypes = [eventTypes.PRESEASON, eventTypes.CMP_DIVISION, eventTypes.CMP_FINALS]
 
 print('Fetching DCMP / divisions teams')
-dcmpTeams = []
-for event in dcmpEvents:
-    dcmpTeams += tba.event_teams(event['key'], False, True)
-
-dcmpTeams = list(set(dcmpTeams))
-dcmpTeams = []
+cmpTeams = tba.event_teams(str(year)+ evt, False, True)
 
 print('Processing team performances')
-dcmpData = []
-for team in tqdm(dcmpTeams):
+cmpData = []
+for team in tqdm(cmpTeams):
     teamEvents = tba.team_events(team, year)
     
     teamData = slffFunctions.getPerformanceData(team, year)
@@ -38,7 +27,7 @@ for team in tqdm(dcmpTeams):
     teamData['ranks'] = []
     
     for event in teamEvents:
-        if event['event_type'] not in ignoreEvents:
+        if event['event_type'] not in ignoreTypes:
             playPts = slffFunctions.getPlayPoints(team, event['key'])
             awardPts = slffFunctions.getAwardPoints(team, event['key'])
 
@@ -48,10 +37,10 @@ for team in tqdm(dcmpTeams):
             teamData['awardPts'].append(awardPts[0])
             teamData['awardStrings'].append(awardPts[1])
     
-    dcmpData.append(teamData)
+    cmpData.append(teamData)
 
 finalData = []
-for entry in dcmpData:
+for entry in cmpData:
     finalDataEntry = {'Team': entry['Team'], 
                     'Max OPR': entry['Max OPR'], 
                     'Avg OPR': entry['Avg OPR'], 
@@ -72,4 +61,4 @@ for entry in dcmpData:
     
 cols = ['Team', 'Win %', 'Wins', 'Losses', 'Ties', 'Max OPR', 'Avg OPR', 'Max Total Pts',
         'Avg Total Pts', 'Avg Rank', 'Best Rank', 'Awards Won', 'Max Play Pts', 'Avg Play Pts', 'Max Award Pts', 'Avg Award Pts']
-gen.listOfDictToCSV(str(year)+dist + ' DCMP Data', finalData, cols, True)
+gen.listOfDictToCSV(str(year)+evt + ' DCMP Data', finalData, cols, True)
