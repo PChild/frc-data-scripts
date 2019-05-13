@@ -251,8 +251,8 @@ def main():
     
     for year in range(startYear, endYear + 1):
         print("On year", year)
-        #eventList = tba.events(year, False, True)
-        #pool.map(saveEventAlliances, eventList)
+        eventList = tba.events(year, False, True)
+        pool.map(saveEventAlliances, eventList)
         #pool.map(saveEventTeamList, eventList)
         #pool.map(saveEventRankings, eventList)
         #pool.map(removeThenSaveEventRanks, eventList)
@@ -260,11 +260,11 @@ def main():
         #pool.map(saveEventInfo, eventList)
         #pool.map(saveEventAwards, eventList)
 
-        teamList = gen.readTeamListCsv(year)
+        #teamList = gen.readTeamListCsv(year)
         #pool.map(partial(saveTeamEvents, year), teamList['Teams'])
         #pool.map(partial(saveTeamAwards, year), teamList['Teams'])
         #pool.map(partial(removeThenSaveTeamAwards, year), teamList['Teams'])
-        pool.map(partial(saveTeamYearMatches, year), teamList['Teams'])
+        #pool.map(partial(saveTeamYearMatches, year), teamList['Teams'])
     pool.close()
     pool.join()
     
