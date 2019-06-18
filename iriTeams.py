@@ -4,7 +4,7 @@ import gen
 
 tba = gen.setup()
 
-YEAR = 2018
+YEAR = 2019
 
 baseList = pd.read_csv('iriIN.csv')
 teamsList = []
