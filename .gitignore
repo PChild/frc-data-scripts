@@ -128,3 +128,5 @@ MountainImages/
 *.mp4
 
 \.idea/
+
+output/

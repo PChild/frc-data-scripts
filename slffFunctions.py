@@ -23,47 +23,47 @@ def getPlayPoints(team, event):
     teamMatches = gen.teamEventMatches(team, event)
     tmpRk = []
     
-#    try:
-    rK = gen.readEventCsv(event, 'rankings')
-    
-    if str(rK['Team'][0]).isnumeric():
-        rK['Team'] = 'frc' + rK['Team'].astype(str)
-    tmpRk = rK[rK.Team == team]
-
-    if len(tmpRk) > 0:
-        teamRank = rK[rK.Team == team]['Rank'].iloc[0]
-        teamCount = len(rK)
+    try:
+        rK = gen.readEventCsv(event, 'rankings')
         
-        alpha = 1.07
-        rankPoints = math.ceil(abs(erfinv( (teamCount - 2 * teamRank + 2) /  (alpha * teamCount)) * 10 / erfinv( 1 / alpha ) + 12 ))
+        if str(rK['Team'][0]).isnumeric():
+            rK['Team'] = 'frc' + rK['Team'].astype(str)
+        tmpRk = rK[rK.Team == team]
     
-        names = ['captain', 'firstPick', 'secondPick']
-
-        aL = gen.readEventCsv(event, 'alliances', names)
-        aLL = aL[(aL.captain == team) | (aL.firstPick == team) | (aL.secondPick == team)]
-        if len(aLL) > 0:
-            alliance = {'pick': 9, 'number': 9}
-            alliance['number'] = aLL.index.values[0]
+        if len(tmpRk) > 0:
+            teamRank = rK[rK.Team == team]['Rank'].iloc[0]
+            teamCount = len(rK)
             
-            if aLL['captain'].values[0] == team:
-                alliance['pick'] = 0
-            elif aLL['firstPick'].values[0] == team:
-                alliance['pick'] = 1
-            elif aLL['secondPick'].values[0] == team:
-                alliance['pick'] = 2
+            alpha = 1.07
+            rankPoints = math.ceil(abs(erfinv( (teamCount - 2 * teamRank + 2) /  (alpha * teamCount)) * 10 / erfinv( 1 / alpha ) + 12 ))
+        
+            names = ['captain', 'firstPick', 'secondPick']
     
-            if alliance['pick'] < 2:
-                draftPoints = 17 - int(alliance['number'])
-            elif alliance['pick'] == 2:
-                draftPoints = int(alliance['number'])
-    
-        if teamMatches is not None:
-            for idx, match in teamMatches.iterrows():
-                if match['key'].split('_')[1][:2] != 'qm':
-                    if gen.matchResult(team, match, False) == 'WIN':
-                        elimPoints += 5
-#    except:
-#        pass
+            aL = gen.readEventCsv(event, 'alliances', names)
+            aLL = aL[(aL.captain == team) | (aL.firstPick == team) | (aL.secondPick == team)]
+            if len(aLL) > 0:
+                alliance = {'pick': 9, 'number': 9}
+                alliance['number'] = aLL.index.values[0]
+                
+                if aLL['captain'].values[0] == team:
+                    alliance['pick'] = 0
+                elif aLL['firstPick'].values[0] == team:
+                    alliance['pick'] = 1
+                elif aLL['secondPick'].values[0] == team:
+                    alliance['pick'] = 2
+        
+                if alliance['pick'] < 2:
+                    draftPoints = 17 - int(alliance['number'])
+                elif alliance['pick'] == 2:
+                    draftPoints = int(alliance['number'])
+        
+            if teamMatches is not None:
+                for idx, match in teamMatches.iterrows():
+                    if match['key'].split('_')[1][:2] != 'qm':
+                        if gen.matchResult(team, match, False) == 'WIN':
+                            elimPoints += 5
+    except:
+        pass
     return [draftPoints, rankPoints, elimPoints, teamRank]
 
 def getAwardPoints(team, event):
