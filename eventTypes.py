@@ -9,3 +9,7 @@ FOC = 6
 OFFSEASON = 99
 PRESEASON = 100
 UNLABLED = -1
+
+NORMAL = [0, 1, 2, 3, 4, 5, 6]
+PRECHAMPS = [0, 1, 2, 5]
+CHAMPS = [3, 4]
